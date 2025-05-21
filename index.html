@@ -1,99 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Matt — Music Embedder 5.0</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matt — Music Embedder 5.0 (single-file)</title>
 
-  <!-- fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Fugaz+One&display=swap" rel="stylesheet"/>
+<!-- fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Fugaz+One&display=swap" rel="stylesheet"/>
 
-  <style>
-  :root{
-    --bg-body:#1e1e1e; --bg-main:#2a2a2a;
-    --fg:#e8e8e8;      --accent:#3d7dff; --accent-h:#5690ff;
-    --danger:#ff4d4d;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;padding:1rem;display:flex;justify-content:center;
-       background:var(--bg-body);color:var(--fg);font-family:Arial,Helvetica,sans-serif}
-  #app{width:100%;max-width:900px;background:var(--bg-main);border-radius:8px;padding:1rem;
-       box-shadow:0 0 12px rgba(0,0,0,.4)}
-  h1{margin:0 0 1rem;text-align:center;font-size:1.9rem}
-  .music{font-family:'Fugaz One',sans-serif;font-style:italic;color:var(--accent)}
+<style>
+:root{
+  --bg-body:#1e1e1e; --bg-main:#2a2a2a;
+  --fg:#e8e8e8;      --accent:#3d7dff; --accent-h:#5690ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:1rem;display:flex;justify-content:center;
+     background:var(--bg-body);color:var(--fg);
+     font-family:Arial,Helvetica,sans-serif}
+#app{width:100%;max-width:900px;background:var(--bg-main);
+     border-radius:8px;padding:1rem;
+     box-shadow:0 0 12px rgba(0,0,0,.4)}
+h1{margin:0 0 1rem;text-align:center;font-size:1.9rem;user-select:none}
+.music{font-family:'Fugaz One',sans-serif;font-style:italic;color:var(--accent)}
 
-  /* tiny (hidden) iframe  –– point 1 */
-  #ytWrapper{position:absolute;width:0;height:0;overflow:hidden}
+#ytWrapper{position:absolute;width:0;height:0;overflow:hidden}     /* 1 */
 
-  /* tabs –– point 2 */
-  .tabs{display:flex;gap:.5rem;justify-content:center;margin-bottom:.8rem;flex-wrap:wrap}
-  .tabs button{flex:1 1 90px;padding:.45rem 0;border:0;border-radius:4px;background:#0002;
-               color:var(--fg);cursor:pointer}
-  .tabs button.active{background:var(--accent);color:#fff}
-  .pane{display:none;max-height:340px;overflow-y:auto;list-style:none;margin:0;padding:0}
-  .pane.active{display:block}
-  .pane li{display:flex;align-items:center;gap:.5rem;
-           padding:.45rem .7rem;border-bottom:1px solid #333}
-  .pane li .ttl{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pane li.selected{background:var(--accent);color:#fff}
+.tabs{display:flex;gap:.5rem;justify-content:center;margin-bottom:.8rem;flex-wrap:wrap}  /* 2 */
+.tabs button{flex:1 1 90px;padding:.45rem 0;border:0;border-radius:4px;background:#0002;
+             color:var(--fg);cursor:pointer}
+.tabs button.active{background:var(--accent);color:#fff}
+.pane{display:none;max-height:340px;overflow-y:auto;list-style:none;margin:0;padding:0}
+.pane.active{display:block}
+.pane li{display:flex;align-items:center;gap:.6rem;
+         padding:.45rem .7rem;border-bottom:1px solid #333}
+.pane li .ttl{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pane li.selected{background:var(--accent);color:#fff}
 
-  /* buttons / inputs */
-  .row{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:1rem}
-  input[type=text]{background:#0003;border:1px solid #444;color:var(--fg);
-                   padding:.5rem .8rem;border-radius:4px;min-width:160px}
-  button{border:0;padding:.5rem 1rem;border-radius:4px;background:var(--accent);
-         color:#fff;cursor:pointer;transition:background .15s,transform .1s}
-  button:hover{background:var(--accent-h)}
-  button:active{transform:scale(.97)}
-  button.icon{padding:.3rem .45rem;background:#0000;font-size:.9rem}
-  button.icon:hover{background:#ffffff22}
-  .toggle-group button{background:#0002;color:var(--fg)}
-  .toggle-group button.active{background:var(--accent);color:#fff}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:1rem}
+input[type=text]{background:#0003;border:1px solid #444;color:var(--fg);
+                 padding:.5rem .8rem;border-radius:4px;min-width:160px}
+button{border:0;padding:.5rem 1rem;border-radius:4px;background:var(--accent);
+       color:#fff;cursor:pointer;transition:background .15s,transform .1s}
+button:hover{background:var(--accent-h)}
+button:active{transform:scale(.97)}
+button.icon{padding:.3rem .45rem;background:#0000;font-size:.9rem}
+button.icon:hover{background:#ffffff22}
+.toggle-group button{background:#0002;color:var(--fg)}
+.toggle-group button.active{background:var(--accent);color:#fff}
 
-  /* toast (undo) –– point 3 */
-  #toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
-         background:#000d;color:#fff;padding:.6rem 1rem;border-radius:5px;display:none}
-  </style>
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
+       background:#000d;color:#fff;padding:.6rem 1rem;border-radius:5px;display:none}
+</style>
 </head>
 <body>
-  <div id="app">
-    <h1>Matt’s <span class="music">MUSIC</span> Embedder</h1>
+<div id="app">
+  <h1>Matt’s <span class="music">MUSIC</span> Embedder</h1>
 
-    <!-- hidden YT iframe (audio only) -->
-    <div id="ytWrapper"><div id="ytPlayer"></div></div>
+  <!-- hidden YT iframe (audio-only) -->
+  <div id="ytWrapper"><div id="ytPlayer"></div></div>
 
-    <!-- ==== TABS ==== -->
-    <div class="tabs" id="tabBar">
-      <button data-tab="pl"   class="active">Playlists</button>
-      <button data-tab="cur">Current</button>
-      <button data-tab="his">History</button>
-    </div>
-
-    <ul id="pl"  class="pane active"></ul>
-    <ul id="cur" class="pane"></ul>
-    <ul id="his" class="pane"></ul>
-
-    <!-- ==== CONTROLS ==== -->
-    <div class="row toggle-group" id="modeGroup">
-      <button data-mode="normal" class="active">▶️ Normal</button>
-      <button data-mode="shuffle">🔀 Shuffle</button>
-    </div>
-
-    <div class="row">
-      <input id="plName" type="text" placeholder="new playlist name"/>
-      <button id="newPlBtn">New playlist</button>
-    </div>
-
-    <div class="row">
-      <input id="ytCode" type="text" placeholder="YouTube code (e.g. dQw4w9WgXcQ)" autocomplete="off"/>
-      <button id="playBtn">Play</button>
-      <button id="addBtn">Add current to playlist</button>
-    </div>
+  <!-- ========== TABS ========== -->
+  <div class="tabs" id="tabBar">
+    <button data-tab="pl"   class="active">Playlists</button>
+    <button data-tab="cur">Current</button>
+    <button data-tab="his">History</button>
   </div>
 
-  <div id="toast"></div>
+  <ul id="pl"  class="pane active"></ul>
+  <ul id="cur" class="pane"></ul>
+  <ul id="his" class="pane"></ul>
 
-  <!-- Main bundle -->
-  <script type="module" src="./main.js"></script>
+  <!-- ========== CONTROLS ========== -->
+  <div class="row toggle-group" id="modeGroup">
+    <button data-mode="normal" class="active">▶️ Normal</button>
+    <button data-mode="shuffle">🔀 Shuffle</button>
+  </div>
+
+  <div class="row">
+    <input id="plName" type="text" placeholder="new playlist name">
+    <button id="newPlBtn">New playlist</button>
+  </div>
+
+  <div class="row">
+    <input id="ytCode" type="text" placeholder="YouTube code (e.g. dQw4w9WgXcQ)" autocomplete="off">
+    <button id="playBtn">Play</button>
+    <button id="addBtn">Add current to playlist</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+/* ===================== tiny helper ===================== */
+const $ = id => document.getElementById(id);
+
+/* ===================== store (point 8) ===================== */
+const KEY = 'ytMusic_single_v50';
+const defaults = { playlists: [], history: [], prefs: { mode:'normal' }, current:null, playIdx:-1 };
+
+let state;
+try{ state = { ...defaults, ...JSON.parse(localStorage.getItem(KEY)||'{}') }; }
+catch{ state = { ...defaults }; }
+
+const listeners = new Set();
+function emit(){ listeners.forEach(fn => fn(state)); }
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+const Store = {
+  sub(fn){ listeners.add(fn); fn(state); return () => listeners.delete(fn); },
+  patch(p){ state = structuredClone({ ...state, ...p }); save(); emit(); },
+  mutate(fn){ fn(state); save(); emit(); },
+  get(){ return state; }
+};
+
+/* ===================== player (1 & 6) ===================== */
+let player, apiReady;
+function ensureAPI(){
+  if(apiReady) return apiReady;
+  apiReady = new Promise(res=>{
+    const tag=document.createElement('script');
+    tag.src='https://www.youtube.com/iframe_api';
+    window.onYouTubeIframeAPIReady=res;
+    document.head.appendChild(tag);
+  });
+  return apiReady;
+}
+async function play(id,onEnd){
+  await ensureAPI();
+  if(!player){
+    player=new YT.Player('ytPlayer',{
+      height:0,width:0,videoId:id,
+      playerVars:{controls:0,rel:0,modestbranding:1,playsinline:1},
+      events:{ onStateChange:e=>{
+        if(e.data===YT.PlayerState.ENDED) onEnd?.();
+      }}
+    });
+  }else player.loadVideoById(id);
+}
+function currentId(){
+  try{ return player?.getVideoData().video_id||null; }catch{return null;}
+}
+
+/* ===================== utils (title-grab & toast) ===================== */
+async function fetchTitle(id){
+  try{
+    const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+    if(!r.ok) throw 0; const j = await r.json(); return j.title || id;
+  }catch{ return id; }
+}
+const toastBox = $('toast');
+function toast(msg,undo){
+  toastBox.textContent = msg;
+  if(undo){
+    const b = document.createElement('button');
+    b.textContent='Undo'; b.style.marginLeft='1ch';
+    b.onclick=()=>{ undo(); hide(); };
+    toastBox.append(b);
+  }
+  toastBox.style.display='block';
+  setTimeout(hide,4000);
+  function hide(){ toastBox.style.display='none'; toastBox.innerHTML=''; }
+}
+
+/* ===================== UI render ===================== */
+const panes = { pl:$('pl'), cur:$('cur'), his:$('his') };
+Store.sub(renderAll);
+
+function renderAll(s){
+  renderPlaylists(s); renderCurrent(s); renderHistory(s); syncModeButtons(s);
+}
+function renderPlaylists({playlists,current}){
+  const ul=panes.pl; ul.innerHTML='';
+  playlists.forEach((pl,i)=> ul.append(liRow(pl.name,
+    icon('🗑️', e=>{e.stopPropagation(); delPlaylist(i);})).onclick=()=>Store.patch({current:i,playIdx:-1})));
+  function liRow(title,...btns){return makeRow(title,false,...btns);}
+}
+function renderCurrent({playlists,current,playIdx}){
+  const ul=panes.cur; ul.innerHTML='';
+  if(current==null) return;
+  playlists[current].songs.forEach((s,i)=>{
+    const row = makeRow(s.title,i===playIdx,
+      icon('❌',e=>{e.stopPropagation(); rmSong(current,i);})).onclick=()=>playFrom(current,i);
+    ul.append(row);
+  });
+}
+function renderHistory({history}){
+  const ul=panes.his; ul.innerHTML='';
+  history.forEach((h,i)=> ul.append(
+    makeRow(h.title,false,icon('🗑️',e=>{e.stopPropagation(); delHist(i);})).onclick=()=>playID(h.id)));
+}
+function makeRow(title,selected,...btns){
+  const li=document.createElement('li');
+  if(selected) li.classList.add('selected');
+  const sp=document.createElement('span'); sp.className='ttl'; sp.textContent=title;
+  li.append(sp,...btns);
+  return li;
+}
+function icon(txt,fn){
+  const b=document.createElement('button'); b.className='icon'; b.textContent=txt; b.onclick=fn; return b;
+}
+function syncModeButtons({prefs}){
+  document.querySelectorAll('#modeGroup button').forEach(b=>
+    b.classList.toggle('active',b.dataset.mode===prefs.mode));
+}
+
+/* ===================== actions ===================== */
+async function playFrom(plIdx,idx){
+  const song = Store.get().playlists[plIdx].songs[idx];
+  Store.patch({current:plIdx,playIdx:idx});
+  await play(song.id,nextTrack);
+}
+async function playID(id){
+  await play(id,nextTrack);
+  const title = await fetchTitle(id);
+  Store.mutate(s=>{
+    s.history.unshift({id,title});
+    s.history.splice(200);
+  });
+}
+function nextTrack(){
+  const s=Store.get(); const list=s.playlists[s.current];
+  if(!list||!list.songs.length) return;
+  let i=s.playIdx;
+  if(s.prefs.mode==='shuffle') i=Math.floor(Math.random()*list.songs.length);
+  else i=(i+1)%list.songs.length;
+  playFrom(s.current,i);
+}
+function delPlaylist(i){
+  const pl=Store.get().playlists[i];
+  Store.mutate(s=>s.playlists.splice(i,1));
+  toast(`Playlist “${pl.name}” removed`,()=>Store.mutate(s=>s.playlists.splice(i,0,pl)));
+}
+function rmSong(plIdx,idx){
+  const song=Store.get().playlists[plIdx].songs[idx];
+  Store.mutate(s=>s.playlists[plIdx].songs.splice(idx,1));
+  toast('Song removed',()=>Store.mutate(s=>s.playlists[plIdx].songs.splice(idx,0,song)));
+}
+function delHist(i){
+  const h=Store.get().history[i];
+  Store.mutate(s=>s.history.splice(i,1));
+  toast('History item removed',()=>Store.mutate(s=>s.history.splice(i,0,h)));
+}
+
+/* ===================== DOM interactions ===================== */
+const tabBar=$('tabBar');
+tabBar.onclick=e=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  tabBar.querySelector('.active').classList.remove('active');
+  btn.classList.add('active');
+  Object.values(panes).forEach(p=>p.classList.toggle('active',p.id===btn.dataset.tab));
+};
+
+$('modeGroup').onclick=e=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  Store.mutate(s=>s.prefs.mode=btn.dataset.mode);
+};
+
+$('newPlBtn').onclick=()=>{
+  const name=$('plName').value.trim(); if(!name) return;
+  Store.mutate(s=>s.playlists.push({name,songs:[]})); $('plName').value='';
+};
+$('playBtn').onclick=()=>{
+  const code=$('ytCode').value.trim(); if(!code) return;
+  playID(code); $('ytCode').value='';
+};
+$('ytCode').onkeypress=e=>{ if(e.key==='Enter') $('playBtn').click(); };
+$('addBtn').onclick=async()=>{
+  const s=Store.get();
+  if(s.current==null){ alert('Select a playlist first'); return; }
+  const id=currentId(); if(!id){ alert('No video playing'); return; }
+  const title=await fetchTitle(id);
+  Store.mutate(st=>st.playlists[s.current].songs.push({id,title}));
+};
+
+/* helper to play from history or paste */
+function playID(id){playID._(id);}  // alias to satisfy hoist
+playID._ = playID;
+</script>
 </body>
 </html>
