@@ -3,49 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <title>Matt's Music Embedder</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">   <!-- mobile scale -->
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;padding:1rem;}
-    h1{text-align:center;margin-bottom:1rem}
-    #player{display:none;}
-    .controls button{margin-right:.5rem}
-    #progress{width:100%}
+    /* ---------- base ---------- */
+    :root{--gap:.6rem;}
+    *{box-sizing:border-box;}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0 auto;max-width:700px;padding:1rem;}
+    h1{text-align:center;margin:0 0 1rem;}
+    #player{display:none;}                  /* hide video – audio only */
+    button,input[type="range"]{font-size:1rem;}
     ul{list-style:none;padding:0;margin:0;}
-    li{padding:.35rem .25rem;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:.4rem}
-    li span.title{flex:1;cursor:pointer}
-    li button{padding:.15rem .4rem}
-    .playlist-controls{margin-top:1.5rem;padding:.75rem;border:1px solid #ccc;border-radius:6px}
-    .playlist-controls h3{margin-top:0}
-    .playlist-controls button,label{margin-top:.4rem;margin-right:.6rem}
+
+    /* ---------- controls ---------- */
+    .controls{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;margin-top:1rem;}
+    .controls button{padding:.4rem 1.1rem;flex:0 0 auto;}
+    #progress{flex:1 1 100%;margin-top:.3rem;}
+
+    /* ---------- queue ---------- */
+    #queueWrap{max-height:50vh;overflow:auto;border:1px solid #ddd;border-radius:6px;}
+    li{display:flex;align-items:center;gap:.4rem;padding:.4rem .35rem;border-bottom:1px solid #f0f0f0;}
+    li span.title{flex:1;cursor:pointer;word-break:break-word;}
+    li button{padding:.2rem .55rem;}
+
+    /* ---------- now-playing ---------- */
+    #nowPlaying{display:none;align-items:center;gap:.6rem;margin-top:var(--gap);border:1px solid #ccc;
+                border-radius:6px;padding:.55rem;}
+    #thumb{width:90px;height:50px;object-fit:cover;border-radius:4px;}
+    #nowTitle{font-weight:bold;}
+
+    /* ---------- playlist box ---------- */
+    .playlist-controls{margin-top:1.5rem;padding:.75rem;border:1px solid #ccc;border-radius:6px;}
+    .playlist-controls h3{margin-top:0;}
+    .playlist-controls button,label{margin-top:.4rem;margin-right:.6rem;}
+
+    /* ---------- small-screen tweaks ---------- */
+    @media(max-width:600px){
+      .controls button{flex:1 1 45%;}          /* big tap targets, two-up grid */
+      #progress{flex:1 1 100%;}
+      li button{padding:.25rem .6rem;}
+      #thumb{width:72px;height:40px;}
+    }
   </style>
 </head>
 <body>
   <h1>Matt's Music Embedder</h1>
 
-  <input id="videoId" placeholder="YouTube video ID">
-  <button id="addBtn">Add &amp; Play</button>
+  <input id="videoId" placeholder="YouTube video ID" style="width:100%;padding:.45rem;">
+  <button id="addBtn" style="margin-top:.6rem;">Add &amp; Play</button>
 
-  <div class="controls" style="margin-top:1rem">
+  <!-- Now Playing -->
+  <div id="nowPlaying">
+    <img id="thumb" alt="thumbnail">
+    <span id="nowTitle"></span>
+  </div>
+
+  <!-- Transport -->
+  <div class="controls">
     <button id="playPause">Play</button>
     <button id="skip">Skip</button>
     <input type="range" id="progress" min="0" max="100" value="0">
   </div>
 
-  <h2>Music Queue</h2>
-  <ul id="queue"></ul>
+  <h2 style="margin-top:1.4rem;">Music Queue</h2>
+  <div id="queueWrap"><ul id="queue"></ul></div>
 
-  <!-- playlists block -->
+  <!-- Playlists -->
   <div class="playlist-controls">
     <h3>Playlists</h3>
     <input id="playlistName" placeholder="New playlist name">
-    <button id="savePlaylist">Save Playlist</button>
-    <br><br>
+    <button id="savePlaylist">Save Playlist</button><br><br>
     <select id="playlistSelect"><option value="">— Load playlist —</option></select>
-    <button id="deletePlaylist">Delete</button>
-    <br><br>
+    <button id="deletePlaylist">Delete</button><br><br>
     <button id="exportPlaylist">Export</button>
-    <!-- styled label keeps file input hidden -->
-    <label style="cursor:pointer">
-      Import
+    <label style="cursor:pointer">Import
       <input type="file" id="importFile" accept=".json" style="display:none">
     </label>
   </div>
@@ -55,163 +85,146 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
   /* ---------- queue persistence ---------- */
-  let queue = [];          // [{id,title}]
-  let currentIdx = -1;
-  const queueEl = document.getElementById('queue');
+  let queue=[],currentIdx=-1;
+  const queueEl=document.getElementById('queue');
 
-  function loadQueueFromCookie(){
-    const m = document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
-    queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
-  }
-  function saveQueueToCookie(){
-    document.cookie = "queue=" + encodeURIComponent(JSON.stringify(queue))+
-                      ";max-age=31536000;path=/";
-  }
+  function loadQueue(){const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
+                       queue=m?JSON.parse(decodeURIComponent(m[1])):[];}
+  function saveQueue(){document.cookie="queue="+encodeURIComponent(JSON.stringify(queue))+
+                                   ";max-age=31536000;path=/";}
 
   /* ---------- playlists (localStorage) ---------- */
-  function getPlaylists(){ return JSON.parse(localStorage.getItem('playlists')||'{}'); }
-  function setPlaylists(o){ localStorage.setItem('playlists',JSON.stringify(o)); }
-  function refreshPlaylistSelect(){
-    const sel=document.getElementById('playlistSelect');
-    sel.innerHTML='<option value="">— Load playlist —</option>';
-    for(const name of Object.keys(getPlaylists()).sort()){
-      sel.insertAdjacentHTML('beforeend',`<option>${name}</option>`);
-    }
-  }
+  const LS_KEY='playlists';
+  const selPl=document.getElementById('playlistSelect');
+  function getLists(){return JSON.parse(localStorage.getItem(LS_KEY)||'{}');}
+  function setLists(o){localStorage.setItem(LS_KEY,JSON.stringify(o));}
+  function refreshSel(){selPl.innerHTML='<option value="">— Load playlist —</option>';
+                        for(const n of Object.keys(getLists()).sort())
+                          selPl.insertAdjacentHTML('beforeend',`<option>${n}</option>`);}
 
   /* ---------- YouTube ---------- */
   let player;
   function onYouTubeIframeAPIReady(){
     player=new YT.Player('player',{height:'0',width:'0',
-      events:{onStateChange:e=>{ if(e.data===0) skip(); }}});
+      events:{onStateChange:e=>{if(e.data===0) skip();}}});
   }
 
   async function fetchTitle(id){
-    try{
-      const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
-      const j=await r.json(); return j.title||id;
-    }catch{return id;}
+    try{const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+        const j=await r.json(); return j.title||id;}catch{return id;}
   }
 
-  /* ---------- rendering ---------- */
+  /* ---------- UI helpers ---------- */
   function renderQueue(){
     queueEl.innerHTML='';
-    queue.forEach((item,i)=>{
+    queue.forEach((it,i)=>{
       queueEl.insertAdjacentHTML('beforeend',`
         <li>
-          <span class="title">${item.title||item.id}</span>
+          <span class="title">${it.title||it.id}</span>
           <button ${i?'':'disabled'} data-up="${i}">↑</button>
           <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
           <button data-del="${i}">✕</button>
-        </li>`);
-    });
+        </li>`);});
   }
 
-  /* ---------- play helpers ---------- */
+  /* ---------- Now-playing ---------- */
+  const nowBox=document.getElementById('nowPlaying'),
+        nowT=document.getElementById('nowTitle'),
+        thumb=document.getElementById('thumb');
+  function updateNowPlaying(item){
+    if(!item){nowBox.style.display='none';return;}
+    nowT.textContent=item.title||item.id;
+    thumb.src=`https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
+    nowBox.style.display='flex';
+  }
+
+  /* ---------- playback ---------- */
   function playIdx(i){
     if(i<0||i>=queue.length) return;
     currentIdx=i;
     player.loadVideoById(queue[i].id);
     document.getElementById('playPause').textContent='Pause';
+    updateNowPlaying(queue[i]);
   }
   function skip(){ playIdx(currentIdx+1); }
 
-  /* ---------- main UI events ---------- */
+  /* ---------- events ---------- */
   document.getElementById('addBtn').addEventListener('click',async()=>{
     const id=document.getElementById('videoId').value.trim();
     if(!id) return;
     const title=await fetchTitle(id);
     queue.unshift({id,title});
-    saveQueueToCookie(); renderQueue(); playIdx(0);
+    saveQueue(); renderQueue(); playIdx(0);
     document.getElementById('videoId').value='';
   });
 
   document.getElementById('playPause').addEventListener('click',function(){
-    if(player.getPlayerState()===1){ player.pauseVideo(); this.textContent='Play'; }
-    else                          { player.playVideo();  this.textContent='Pause';}
+    if(player.getPlayerState()===1){player.pauseVideo();this.textContent='Play';}
+    else                          {player.playVideo(); this.textContent='Pause';}
   });
   document.getElementById('skip').addEventListener('click',skip);
 
-  /* progress slider */
-  setInterval(()=>{
-    if(!player||!player.getDuration) return;
-    const d=player.getDuration();
-    if(d) document.getElementById('progress').value=
-            player.getCurrentTime()/d*100;
-  },1000);
+  setInterval(()=>{if(!player||!player.getDuration)return;
+                   const d=player.getDuration();
+                   if(d)document.getElementById('progress').value=
+                          player.getCurrentTime()/d*100;},1000);
   document.getElementById('progress').addEventListener('input',function(){
-    if(player&&player.getDuration) player.seekTo(player.getDuration()*this.value/100,true);
+    if(player&&player.getDuration)player.seekTo(player.getDuration()*this.value/100,true);
   });
 
-  /* queue manipulation */
+  /* queue actions */
   queueEl.addEventListener('click',e=>{
     const {up,down,del}=e.target.dataset;
-    if(up){ [queue[up-1],queue[up]]=[queue[up],queue[up-1]]; }
-    else if(down){ [queue[+down],queue[+down+1]]=[queue[+down+1],queue[+down]]; }
-    else if(del){ queue.splice(del,1); if(currentIdx>=del) currentIdx--; }
+    if(up){[queue[up-1],queue[up]]=[queue[up],queue[up-1]];}
+    else if(down){[queue[+down],queue[+down+1]]=[queue[+down+1],queue[+down]];}
+    else if(del){queue.splice(del,1);if(currentIdx>=del)currentIdx--;}
     else if(e.target.classList.contains('title')){
-      playIdx([...queueEl.children].indexOf(e.target.parentElement));
-      return;
-    } else return;
-    renderQueue(); saveQueueToCookie();
+      playIdx([...queueEl.children].indexOf(e.target.parentElement));return;
+    }else return;
+    renderQueue();saveQueue();
   });
 
-  /* playlist save/load/delete */
+  /* playlists */
   document.getElementById('savePlaylist').addEventListener('click',()=>{
     const name=document.getElementById('playlistName').value.trim();
-    if(!name||!queue.length) return;
-    const lists=getPlaylists(); lists[name]=queue; setPlaylists(lists);
-    refreshPlaylistSelect(); alert('Playlist saved!');
+    if(!name||!queue.length)return;
+    const lists=getLists();lists[name]=queue;setLists(lists);
+    refreshSel();alert('Playlist saved!');
   });
-  document.getElementById('playlistSelect').addEventListener('change',function(){
-    const name=this.value; if(!name) return;
-    queue=[...getPlaylists()[name]]; renderQueue(); saveQueueToCookie(); playIdx(0);
+  selPl.addEventListener('change',function(){
+    const name=this.value;if(!name)return;
+    queue=[...getLists()[name]];renderQueue();saveQueue();playIdx(0);
   });
   document.getElementById('deletePlaylist').addEventListener('click',()=>{
-    const sel=document.getElementById('playlistSelect'); if(!sel.value) return;
-    const lists=getPlaylists(); delete lists[sel.value]; setPlaylists(lists);
-    refreshPlaylistSelect(); sel.value='';
+    if(!selPl.value)return;
+    const lists=getLists();delete lists[selPl.value];setLists(lists);
+    refreshSel();selPl.value='';
   });
 
-  /* ---------- NEW: Export / Import ---------- */
-  /* Export selected playlist OR current queue */
+  /* Export / Import (unchanged) */
   document.getElementById('exportPlaylist').addEventListener('click',()=>{
-    const sel=document.getElementById('playlistSelect').value;
-    let name,data;
-    if(sel){                               // export chosen playlist
-      const lists=getPlaylists();
-      data=lists[sel]; name=sel;
-    }else{                                 // or current queue
-      if(!queue.length){ alert('Nothing to export'); return; }
-      data=queue; name='CurrentQueue';
-    }
+    const chosen=selPl.value;let name,data;
+    if(chosen){data=getLists()[chosen];name=chosen;}
+    else{if(!queue.length){alert('Nothing to export');return;}
+         data=queue;name='CurrentQueue';}
     const blob=new Blob([JSON.stringify({name,data})],{type:'application/json'});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download=name+'.json'; a.click();
+    const a=document.createElement('a');a.href=url;a.download=name+'.json';a.click();
     URL.revokeObjectURL(url);
   });
-
-  /* Import a playlist file */
   document.getElementById('importFile').addEventListener('change',function(){
-    const file=this.files[0]; if(!file) return;
-    const reader=new FileReader();
-    reader.onload=e=>{
-      try{
-        const obj=JSON.parse(e.target.result);
-        if(!obj.name||!Array.isArray(obj.data)) throw 'bad';
-        const lists=getPlaylists();
-        lists[obj.name]=obj.data;
-        setPlaylists(lists); refreshPlaylistSelect();
-        alert('Imported “‘'+obj.name+'” playlist!');
-      }catch{ alert('Invalid playlist file'); }
-    };
-    reader.readAsText(file); this.value='';
+    const f=this.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{try{const obj=JSON.parse(e.target.result);
+      if(!obj.name||!Array.isArray(obj.data))throw'bad';
+      const lists=getLists();lists[obj.name]=obj.data;setLists(lists);
+      refreshSel();alert('Imported “‘'+obj.name+'” playlist!');}
+      catch{alert('Invalid playlist file');}};
+    r.readAsText(f);this.value='';
   });
 
   /* ---------- init ---------- */
-  loadQueueFromCookie();
-  renderQueue(); refreshPlaylistSelect();
+  loadQueue();renderQueue();refreshSel();updateNowPlaying(queue[currentIdx]);
   </script>
 </body>
 </html>
