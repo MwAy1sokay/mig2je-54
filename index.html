@@ -2,19 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>YouTube Audio Jukebox</title>
+  <title>Matt's Music Embedder</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:40px auto;text-align:center;}
+    body{font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:40px auto;text-align:center;}
     #controls{margin-top:20px;}
     #progress{width:100%;}
     #songList{list-style:none;padding:0;margin-top:20px;text-align:left;}
-    #songList li{padding:4px 0;border-bottom:1px solid #ddd;}
+    #songList li{padding:6px 8px;border-bottom:1px solid #ddd;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+    #songList li span.title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #songList li span.actions button{margin-left:4px;}
     #player{width:0;height:0;visibility:hidden;}
+    button{cursor:pointer;}
   </style>
 </head>
 <body>
-  <h1>YouTube Audio Jukebox</h1>
-  <input type="text" id="videoInput" placeholder="Enter YouTube video ID (e.g. dQw4w9WgXcQ)">
+  <h1>Matt's Music Embedder</h1>
+  <input type="text" id="videoInput" placeholder="Enter YouTube video ID (e.g. dQw4w9WgXcQ)" style="width:60%">
   <button id="addBtn">Add & Play</button>
 
   <div id="controls">
@@ -23,7 +26,7 @@
     <input type="range" id="progress" min="0" max="100" value="0">
   </div>
 
-  <h2>Previously Played</h2>
+  <h2>Music Queue</h2>
   <ul id="songList"></ul>
 
   <div id="player"></div>
@@ -34,146 +37,207 @@
     let playlist = [];
     let currentIndex = 0;
     let progressTimer;
+    let currentVideoId = null;
 
+    /* -------------------- Cookie helpers -------------------- */
     function setCookie(name,value,days){
       const expires = new Date(Date.now()+days*864e5).toUTCString();
-      document.cookie = name+'='+encodeURIComponent(value)+'; expires='+expires+'; path=/';
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
     }
     function getCookie(name){
       return document.cookie.split('; ').reduce((r,v)=>{
         const parts = v.split('=');
-        return parts[0]===name ? decodeURIComponent(parts[1]) : r
+        return parts[0]===name ? decodeURIComponent(parts[1]) : r;
       }, '');
     }
 
+    /* -------------------- Persistence -------------------- */
     function savePlaylist(){
       setCookie('playlist', JSON.stringify(playlist), 365);
     }
     function loadPlaylist(){
       const data = getCookie('playlist');
       if(data){
-        try{
-          playlist = JSON.parse(data);
-          renderList();
-        }catch(e){}
+        try{ playlist = JSON.parse(data); }
+        catch(e){ playlist = []; }
       }
     }
 
-    function addVideo(id){
-      fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`)
-        .then(r=>r.json())
-        .then(meta=>{
-          playlist.push({id,title:meta.title||id});
-          savePlaylist();
-          renderList();
-          if(playlist.length-1 === currentIndex && !player){
-            initPlayer(id);
-          }else if(player && player.getPlayerState()!==1){
-            playCurrent();
-          }
-        })
-        .catch(()=>{ playlist.push({id,title:id}); savePlaylist(); renderList(); });
-    }
-
+    /* -------------------- Playlist rendering -------------------- */
     function renderList(){
-      const ul=document.getElementById('songList');
-      ul.innerHTML='';
+      const ul = document.getElementById('songList');
+      ul.innerHTML = '';
       playlist.forEach((vid,i)=>{
-        const li=document.createElement('li');
-        li.textContent=(i===currentIndex?'▶ ':'')+vid.title;
+        const li = document.createElement('li');
+        li.dataset.index = i;
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'title';
+        titleSpan.textContent = (i===currentIndex ? '▶ ' : '') + vid.title;
+        li.appendChild(titleSpan);
+
+        const actions = document.createElement('span');
+        actions.className = 'actions';
+        // Up button
+        const upBtn = document.createElement('button'); upBtn.textContent = '↑'; upBtn.className = 'up'; actions.appendChild(upBtn);
+        // Down button
+        const downBtn = document.createElement('button'); downBtn.textContent = '↓'; downBtn.className = 'down'; actions.appendChild(downBtn);
+        // Delete button
+        const delBtn = document.createElement('button'); delBtn.textContent = '✕'; delBtn.className = 'delete'; actions.appendChild(delBtn);
+
+        li.appendChild(actions);
         ul.appendChild(li);
       });
     }
 
+    /* -------------------- YouTube API -------------------- */
     function onYouTubeIframeAPIReady(){
       loadPlaylist();
       if(playlist.length){
         initPlayer(playlist[0].id);
       }
+      renderList();
     }
-
     function initPlayer(videoId){
+      currentVideoId = videoId;
       player = new YT.Player('player',{
-        height:'0',
-        width:'0',
-        videoId,
-        playerVars:{'autoplay':1,'controls':0},
-        events:{
-          'onReady':onPlayerReady,
-          'onStateChange':onPlayerStateChange
-        }
+        height:'0', width:'0', videoId,
+        playerVars:{autoplay:1, controls:0},
+        events:{ onReady:onPlayerReady, onStateChange:onPlayerStateChange }
       });
     }
-    function onPlayerReady(){
-      startProgressTimer();
-    }
+    function onPlayerReady(){ startProgressTimer(); }
     function onPlayerStateChange(event){
-      if(event.data===0){ //ended
-        nextSong();
-      }else if(event.data===1){ //playing
+      if(event.data===0){ nextSong(); }
+      else if(event.data===1){
         startProgressTimer();
         document.getElementById('playPauseBtn').textContent='Pause';
-      }else if(event.data===2){ //paused
+      }else if(event.data===2){
         stopProgressTimer();
         document.getElementById('playPauseBtn').textContent='Play';
       }
     }
 
+    /* -------------------- Playback helpers -------------------- */
     function playCurrent(){
-      if(player){
-        player.loadVideoById(playlist[currentIndex].id);
-        renderList();
-      }else{
-        initPlayer(playlist[currentIndex].id);
-      }
+      if(!playlist.length) return;
+      currentVideoId = playlist[currentIndex].id;
+      if(player){ player.loadVideoById(currentVideoId); }
+      else{ initPlayer(currentVideoId); }
+      renderList();
     }
-
     function nextSong(){
-      if(playlist.length===0) return;
-      currentIndex = (currentIndex+1)%playlist.length;
+      if(!playlist.length) return;
+      currentIndex = (currentIndex + 1) % playlist.length;
       playCurrent();
     }
-
     function togglePlay(){
       if(!player) return;
-      const state=player.getPlayerState();
-      if(state===1){ //playing
-        player.pauseVideo();
-      }else{
-        player.playVideo();
-      }
+      const state = player.getPlayerState();
+      if(state===1){ player.pauseVideo(); }
+      else{ player.playVideo(); }
     }
 
     function startProgressTimer(){
       stopProgressTimer();
-      progressTimer=setInterval(()=>{
+      progressTimer = setInterval(()=>{
         if(player && player.getDuration){
-          const p = (player.getCurrentTime()/player.getDuration())*100;
-          document.getElementById('progress').value=p||0;
+          const p = (player.getCurrentTime() / player.getDuration()) * 100;
+          document.getElementById('progress').value = p || 0;
         }
-      },1000);
+      }, 1000);
     }
     function stopProgressTimer(){
       clearInterval(progressTimer);
     }
 
-    document.getElementById('addBtn').addEventListener('click',()=>{
-      const id=document.getElementById('videoInput').value.trim();
-      if(id){
-        addVideo(id);
-        document.getElementById('videoInput').value='';
+    /* -------------------- Queue manipulation -------------------- */
+    function addVideo(id){
+      fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`)
+        .then(r=>r.json())
+        .then(meta=>{
+          playlist.unshift({id, title: meta.title || id});
+          currentIndex = 0;
+          savePlaylist();
+          renderList();
+          playCurrent();
+        })
+        .catch(()=>{
+          playlist.unshift({id, title: id});
+          currentIndex = 0;
+          savePlaylist();
+          renderList();
+          playCurrent();
+        });
+    }
+
+    function removeSong(i){
+      if(i<0 || i>=playlist.length) return;
+      const removed = playlist.splice(i,1)[0];
+      // adjust currentIndex
+      if(i < currentIndex) currentIndex--; // shifted left
+      else if(i === currentIndex){
+        if(playlist.length){
+          if(currentIndex >= playlist.length) currentIndex = 0;
+          playCurrent();
+        }else{
+          currentIndex = 0;
+          if(player) player.stopVideo();
+        }
       }
+      savePlaylist();
+      renderList();
+    }
+
+    function moveSong(i, delta){
+      const newIndex = i + delta;
+      if(newIndex < 0 || newIndex >= playlist.length) return;
+      const [item] = playlist.splice(i,1);
+      playlist.splice(newIndex,0,item);
+      // recalc currentIndex
+      currentIndex = playlist.findIndex(v=>v.id===currentVideoId);
+      savePlaylist();
+      renderList();
+    }
+
+    function playSong(i){
+      if(i<0 || i>=playlist.length) return;
+      currentIndex = i;
+      playCurrent();
+    }
+
+    /* -------------------- DOM Events -------------------- */
+    document.getElementById('addBtn').addEventListener('click',()=>{
+      const id = document.getElementById('videoInput').value.trim();
+      if(id){ addVideo(id); document.getElementById('videoInput').value=''; }
     });
+
     document.getElementById('skipBtn').addEventListener('click',nextSong);
     document.getElementById('playPauseBtn').addEventListener('click',togglePlay);
+
     document.getElementById('progress').addEventListener('input',e=>{
       if(player && player.seekTo){
-        const seek = (e.target.value/100)*player.getDuration();
+        const seek = (e.target.value / 100) * player.getDuration();
         player.seekTo(seek,true);
       }
     });
 
-    window.addEventListener('beforeunload',()=>{savePlaylist();});
+    // Event delegation for queue actions
+    document.getElementById('songList').addEventListener('click',e=>{
+      const li = e.target.closest('li');
+      if(!li) return;
+      const index = Number(li.dataset.index);
+      if(e.target.classList.contains('delete')){
+        removeSong(index);
+      }else if(e.target.classList.contains('up')){
+        moveSong(index, -1);
+      }else if(e.target.classList.contains('down')){
+        moveSong(index, 1);
+      }else{
+        playSong(index);
+      }
+    });
+
+    window.addEventListener('beforeunload',savePlaylist);
   </script>
 </body>
 </html>
