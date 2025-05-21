@@ -6,7 +6,7 @@
   <style>
     body{font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;padding:1rem;}
     h1{text-align:center;margin-bottom:1rem}
-    #player{display:none;}               /* hide the video, we only want audio */
+    #player{display:none;}
     .controls button{margin-right:.5rem}
     #progress{width:100%}
     ul{list-style:none;padding:0;margin:0;}
@@ -15,6 +15,7 @@
     li button{padding:.15rem .4rem}
     .playlist-controls{margin-top:1.5rem;padding:.75rem;border:1px solid #ccc;border-radius:6px}
     .playlist-controls h3{margin-top:0}
+    .playlist-controls button,label{margin-top:.4rem;margin-right:.6rem}
   </style>
 </head>
 <body>
@@ -32,7 +33,7 @@
   <h2>Music Queue</h2>
   <ul id="queue"></ul>
 
-  <!----- simple playlist block ----->
+  <!-- playlists block -->
   <div class="playlist-controls">
     <h3>Playlists</h3>
     <input id="playlistName" placeholder="New playlist name">
@@ -40,14 +41,21 @@
     <br><br>
     <select id="playlistSelect"><option value="">— Load playlist —</option></select>
     <button id="deletePlaylist">Delete</button>
+    <br><br>
+    <button id="exportPlaylist">Export</button>
+    <!-- styled label keeps file input hidden -->
+    <label style="cursor:pointer">
+      Import
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </label>
   </div>
 
   <div id="player"></div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-  /* ---------- queue persistence (cookie) ---------- */
-  let queue = [];         // [{id, title}]
+  /* ---------- queue persistence ---------- */
+  let queue = [];          // [{id,title}]
   let currentIdx = -1;
   const queueEl = document.getElementById('queue');
 
@@ -56,146 +64,154 @@
     queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
   }
   function saveQueueToCookie(){
-    document.cookie = "queue=" + encodeURIComponent(JSON.stringify(queue)) +
+    document.cookie = "queue=" + encodeURIComponent(JSON.stringify(queue))+
                       ";max-age=31536000;path=/";
   }
 
   /* ---------- playlists (localStorage) ---------- */
-  function getPlaylists(){
-    return JSON.parse(localStorage.getItem('playlists')||'{}');
-  }
-  function setPlaylists(obj){
-    localStorage.setItem('playlists', JSON.stringify(obj));
-  }
+  function getPlaylists(){ return JSON.parse(localStorage.getItem('playlists')||'{}'); }
+  function setPlaylists(o){ localStorage.setItem('playlists',JSON.stringify(o)); }
   function refreshPlaylistSelect(){
-    const sel = document.getElementById('playlistSelect');
-    sel.innerHTML = '<option value="">— Load playlist —</option>';
-    for(const name of Object.keys(getPlaylists())){
-      sel.insertAdjacentHTML('beforeend', `<option>${name}</option>`);
+    const sel=document.getElementById('playlistSelect');
+    sel.innerHTML='<option value="">— Load playlist —</option>';
+    for(const name of Object.keys(getPlaylists()).sort()){
+      sel.insertAdjacentHTML('beforeend',`<option>${name}</option>`);
     }
   }
 
-  /* ---------- YouTube player ---------- */
+  /* ---------- YouTube ---------- */
   let player;
   function onYouTubeIframeAPIReady(){
-    player = new YT.Player('player',{
-      height:'0', width:'0',
-      events:{ onStateChange:e=>{
-        if(e.data===0) skip();                        // auto-play next when finished
-      }}
-    });
+    player=new YT.Player('player',{height:'0',width:'0',
+      events:{onStateChange:e=>{ if(e.data===0) skip(); }}});
   }
 
-  /* ---------- UI helpers ---------- */
   async function fetchTitle(id){
     try{
-      const r = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
-      const j = await r.json();
-      return j.title || id;
-    }catch{ return id; }
+      const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+      const j=await r.json(); return j.title||id;
+    }catch{return id;}
   }
 
+  /* ---------- rendering ---------- */
   function renderQueue(){
-    queueEl.innerHTML = '';
+    queueEl.innerHTML='';
     queue.forEach((item,i)=>{
       queueEl.insertAdjacentHTML('beforeend',`
         <li>
-          <span class="title">${item.title || item.id}</span>
-          <button ${i?'' : 'disabled'} data-up="${i}">↑</button>
+          <span class="title">${item.title||item.id}</span>
+          <button ${i?'':'disabled'} data-up="${i}">↑</button>
           <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
           <button data-del="${i}">✕</button>
         </li>`);
     });
   }
 
-  /* ---------- play logic ---------- */
+  /* ---------- play helpers ---------- */
   function playIdx(i){
     if(i<0||i>=queue.length) return;
-    currentIdx = i;
+    currentIdx=i;
     player.loadVideoById(queue[i].id);
-    document.getElementById('playPause').textContent = 'Pause';
+    document.getElementById('playPause').textContent='Pause';
   }
   function skip(){ playIdx(currentIdx+1); }
 
-  /* ---------- event listeners ---------- */
-  document.getElementById('addBtn').addEventListener('click', async ()=>{
-    const id = document.getElementById('videoId').value.trim();
+  /* ---------- main UI events ---------- */
+  document.getElementById('addBtn').addEventListener('click',async()=>{
+    const id=document.getElementById('videoId').value.trim();
     if(!id) return;
-    const title = await fetchTitle(id);
+    const title=await fetchTitle(id);
     queue.unshift({id,title});
-    saveQueueToCookie();
-    renderQueue();
-    playIdx(0);
+    saveQueueToCookie(); renderQueue(); playIdx(0);
     document.getElementById('videoId').value='';
   });
 
-  document.getElementById('playPause').addEventListener('click', function(){
+  document.getElementById('playPause').addEventListener('click',function(){
     if(player.getPlayerState()===1){ player.pauseVideo(); this.textContent='Play'; }
     else                          { player.playVideo();  this.textContent='Pause';}
   });
-  document.getElementById('skip').addEventListener('click', skip);
+  document.getElementById('skip').addEventListener('click',skip);
 
-  /* progress bar */
+  /* progress slider */
   setInterval(()=>{
     if(!player||!player.getDuration) return;
-    const d = player.getDuration();
-    if(d) document.getElementById('progress').value =
-          player.getCurrentTime()/d*100;
-  }, 1000);
-  document.getElementById('progress').addEventListener('input', function(){
-    if(player&&player.getDuration) player.seekTo(player.getDuration()*this.value/100, true);
+    const d=player.getDuration();
+    if(d) document.getElementById('progress').value=
+            player.getCurrentTime()/d*100;
+  },1000);
+  document.getElementById('progress').addEventListener('input',function(){
+    if(player&&player.getDuration) player.seekTo(player.getDuration()*this.value/100,true);
   });
 
-  /* queue buttons (event delegation) */
-  queueEl.addEventListener('click', e=>{
-    const up    = e.target.dataset.up;
-    const down  = e.target.dataset.down;
-    const del   = e.target.dataset.del;
-    if(up){
-      [queue[up-1],queue[up]] = [queue[up],queue[up-1]];
-    }else if(down){
-      [queue[+down],queue[+down+1]] = [queue[+down+1],queue[+down]];
-    }else if(del){
-      queue.splice(del,1);
-      if(currentIdx>=del) currentIdx--;              // keep pointer sane
-    }else if(e.target.classList.contains('title')){
+  /* queue manipulation */
+  queueEl.addEventListener('click',e=>{
+    const {up,down,del}=e.target.dataset;
+    if(up){ [queue[up-1],queue[up]]=[queue[up],queue[up-1]]; }
+    else if(down){ [queue[+down],queue[+down+1]]=[queue[+down+1],queue[+down]]; }
+    else if(del){ queue.splice(del,1); if(currentIdx>=del) currentIdx--; }
+    else if(e.target.classList.contains('title')){
       playIdx([...queueEl.children].indexOf(e.target.parentElement));
-    }else return;
+      return;
+    } else return;
     renderQueue(); saveQueueToCookie();
   });
 
-  /* playlists */
-  document.getElementById('savePlaylist').addEventListener('click', ()=>{
-    const name = document.getElementById('playlistName').value.trim();
+  /* playlist save/load/delete */
+  document.getElementById('savePlaylist').addEventListener('click',()=>{
+    const name=document.getElementById('playlistName').value.trim();
     if(!name||!queue.length) return;
-    const lists = getPlaylists();
-    lists[name] = queue;
-    setPlaylists(lists);
-    refreshPlaylistSelect();
-    alert('Playlist saved!');
+    const lists=getPlaylists(); lists[name]=queue; setPlaylists(lists);
+    refreshPlaylistSelect(); alert('Playlist saved!');
+  });
+  document.getElementById('playlistSelect').addEventListener('change',function(){
+    const name=this.value; if(!name) return;
+    queue=[...getPlaylists()[name]]; renderQueue(); saveQueueToCookie(); playIdx(0);
+  });
+  document.getElementById('deletePlaylist').addEventListener('click',()=>{
+    const sel=document.getElementById('playlistSelect'); if(!sel.value) return;
+    const lists=getPlaylists(); delete lists[sel.value]; setPlaylists(lists);
+    refreshPlaylistSelect(); sel.value='';
   });
 
-  document.getElementById('playlistSelect').addEventListener('change', function(){
-    const name = this.value;
-    if(!name) return;
-    queue = [...getPlaylists()[name]];
-    renderQueue(); saveQueueToCookie(); playIdx(0);
+  /* ---------- NEW: Export / Import ---------- */
+  /* Export selected playlist OR current queue */
+  document.getElementById('exportPlaylist').addEventListener('click',()=>{
+    const sel=document.getElementById('playlistSelect').value;
+    let name,data;
+    if(sel){                               // export chosen playlist
+      const lists=getPlaylists();
+      data=lists[sel]; name=sel;
+    }else{                                 // or current queue
+      if(!queue.length){ alert('Nothing to export'); return; }
+      data=queue; name='CurrentQueue';
+    }
+    const blob=new Blob([JSON.stringify({name,data})],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=name+'.json'; a.click();
+    URL.revokeObjectURL(url);
   });
 
-  document.getElementById('deletePlaylist').addEventListener('click', ()=>{
-    const sel = document.getElementById('playlistSelect');
-    if(!sel.value) return;
-    const lists = getPlaylists();
-    delete lists[sel.value];
-    setPlaylists(lists);
-    refreshPlaylistSelect();
-    sel.value='';
+  /* Import a playlist file */
+  document.getElementById('importFile').addEventListener('change',function(){
+    const file=this.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const obj=JSON.parse(e.target.result);
+        if(!obj.name||!Array.isArray(obj.data)) throw 'bad';
+        const lists=getPlaylists();
+        lists[obj.name]=obj.data;
+        setPlaylists(lists); refreshPlaylistSelect();
+        alert('Imported “‘'+obj.name+'” playlist!');
+      }catch{ alert('Invalid playlist file'); }
+    };
+    reader.readAsText(file); this.value='';
   });
 
   /* ---------- init ---------- */
   loadQueueFromCookie();
-  renderQueue();
-  refreshPlaylistSelect();
+  renderQueue(); refreshPlaylistSelect();
   </script>
 </body>
 </html>
