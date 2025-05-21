@@ -5,67 +5,64 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matt's Music Embedder 4.2</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Fugaz+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Fugaz+One&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --border: 2px solid #000;
-      --accent: #0077ff;
-      --accent-dark: #005ecc;
+      --bg-body: #1e1e1e;
+      --bg-main: #2a2a2a;
+      --fg-main: #e8e8e8;
+      --border: 1px solid #444;
+      --accent: #3d7dff;
+      --accent-hover: #5690ff;
+      --danger: #ff4d4d;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
-      margin:0; padding:1.25rem;
-      display:flex; justify-content:center;
-      background:#f9f9f9; font-family: Arial, Helvetica, sans-serif;
+      margin: 0; padding: 1.25rem;
+      display: flex; justify-content: center;
+      background: var(--bg-body); color: var(--fg-main);
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     #app {
-      border:var(--border); background:#fff; padding:1.5rem; width:100%; max-width:1100px;
+      width: 100%; max-width: 1100px; background: var(--bg-main);
+      border: var(--border); padding: 1.25rem; border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
     }
 
-    h1 { text-align:center; margin-top:0; font-size:2.1rem; user-select:none; }
-    .music-word { font-family:'Fugaz One', sans-serif; font-style:italic; letter-spacing:1px; }
+    h1 {
+      margin: 0 0 1rem 0; text-align: center; font-size: 2rem; user-select: none;
+    }
+    .music-word { font-family: 'Fugaz One', sans-serif; font-style: italic; letter-spacing: 1px; color: var(--accent); }
 
-    /* ===================== Player ===================== */
-    .player { border:var(--border); margin-bottom:1.2rem; position:relative; padding-top:56.25%; }
-    #ytPlayer { position:absolute; inset:0; }
+    /* ================= Player ================ */
+    .player { position: relative; width: 100%; height: 110px; border: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+    #ytPlayer { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-    /* ===================== Lists ===================== */
-    .lists {
-      display:flex; gap:1rem; flex-wrap:wrap;
-    }
-    .lists > div {
-      flex:1 1 260px; border:var(--border); display:flex; flex-direction:column; max-height:380px;
-    }
-    .lists h2 { margin:0; padding:0.5rem 0.75rem; border-bottom:1px solid #ddd; font-size:1.25rem; }
-    ul {
-      list-style:none; margin:0; padding:0; overflow-y:auto;
-    }
-    li {
-      padding:0.45rem 0.6rem; cursor:pointer; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;
-      user-select:none; border-bottom:1px solid #efefef; transition:background 0.15s;
-    }
-    li:hover { background:#f0f8ff; }
-    li.selected { background:var(--accent); color:#fff; }
+    /* ================= Lists ================ */
+    .lists { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .lists > div { flex: 1 1 260px; display: flex; flex-direction: column; max-height: 340px; border: var(--border); border-radius: 4px; overflow: hidden; backdrop-filter: blur(4px); }
+    .lists h2 { margin: 0; padding: 0.55rem 0.8rem; font-size: 1.15rem; background: #00000033; }
+    ul { margin: 0; padding: 0; list-style: none; overflow-y: auto; scrollbar-width: thin; }
+    li { padding: 0.45rem 0.75rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #333; }
+    li:hover { background: #ffffff0d; }
+    li.selected { background: var(--accent); color: #fff; }
 
-    /* ===================== Controls ===================== */
-    .controls, .bottom-row {
-      display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem; justify-content:center;
-    }
-    button, input[type="text"] {
-      padding:0.55rem 1rem; font-size:1rem; border:var(--border); background:#fff; cursor:pointer;
-    }
-    button { background:var(--accent); color:#fff; border:none; transition:background 0.2s; }
-    button:hover { background:var(--accent-dark); }
-    button.toggled { background:#666; }
-    input[type="text"] { flex:1 1 220px; min-width:160px; }
-    .wide-input { flex:1 1 100%; }
+    /* ================= Controls ================ */
+    .controls, .bottom-row { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 1rem; }
+    input[type="text"] { background: #00000044; border: var(--border); color: var(--fg-main); padding: 0.55rem 0.8rem; border-radius: 4px; font-size: 1rem; }
+    button { border: none; padding: 0.55rem 1.1rem; border-radius: 4px; font-size: 1rem; cursor: pointer; background: var(--accent); color: #fff; transition: background 0.2s, transform 0.1s; }
+    button:hover { background: var(--accent-hover); }
+    button:active { transform: scale(0.97); }
+    button.toggled { background: #555; }
+    button.delete { background: var(--danger); }
+    .wide-input { flex: 1 1 300px; min-width: 180px; }
 
-    @media(max-width:768px) {
-      .lists { flex-direction:column; }
-      .lists > div { max-height:220px; }
+    @media (max-width: 768px) {
+      .lists { flex-direction: column; }
+      .lists > div { max-height: 240px; }
     }
   </style>
 </head>
@@ -73,10 +70,10 @@
   <div id="app">
     <h1>Matt's <span class="music-word">MUSIC</span> Embedder</h1>
 
-    <!-- YouTube Player -->
+    <!-- Tiny YouTube player (audio focus) -->
     <div class="player"><div id="ytPlayer"></div></div>
 
-    <!-- Lists section -->
+    <!-- List columns -->
     <div class="lists">
       <div>
         <h2>Playlists</h2>
@@ -92,249 +89,198 @@
       </div>
     </div>
 
-    <!-- Control buttons -->
+    <!-- Control buttons row -->
     <div class="controls">
       <button id="shuffleBtn">Shuffle</button>
       <button id="autoplayBtn">Autoplay: Off</button>
       <input id="newPlaylistName" type="text" placeholder="playlist name" />
-      <button id="newPlaylistBtn">new playlist</button>
+      <button id="newPlaylistBtn">New playlist</button>
     </div>
 
     <!-- Bottom input row -->
     <div class="bottom-row">
       <input id="ytCode" class="wide-input" type="text" placeholder="Enter YouTube code (e.g. dQw4w9WgXcQ)" autocomplete="off" />
       <button id="playBtn">Play</button>
-      <button id="addToPlaylistBtn">add to playlist</button>
+      <button id="addToPlaylistBtn">Add current to playlist</button>
     </div>
   </div>
 
-  <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    /*** ========= State ========= ***/
+    /* ==================== State ==================== */
     let player;
-    let playlists = [];              // [{name, songs:[{id,title}]}]
-    let history = [];                // array of {id,title}
-    let currentPlaylist = null;      // playlist object or null for no playlist
-    let currentIndex = -1;           // index within currentPlaylist.songs
+    let playlists = [];
+    let history = [];
+    let currentPlaylist = null;
+    let currentIndex = -1;
     let autoplay = false;
     let shuffle = false;
 
-    const lsKEY = "ytMusicEmbedderData_v42";
+    const LS_KEY = 'ytMusicEmbedder_v43';
 
-    /*** ========= DOM ========= ***/
-    const playlistsList = document.getElementById("playlistsList");
-    const currentList   = document.getElementById("currentList");
-    const historyList   = document.getElementById("historyList");
-    const currentTitle  = document.getElementById("currentTitle");
+    /* ==================== DOM refs ==================== */
+    const playlistsList = document.getElementById('playlistsList');
+    const currentList   = document.getElementById('currentList');
+    const historyList   = document.getElementById('historyList');
+    const currentTitle  = document.getElementById('currentTitle');
 
-    const shuffleBtn    = document.getElementById("shuffleBtn");
-    const autoplayBtn   = document.getElementById("autoplayBtn");
-    const newPlNameInp  = document.getElementById("newPlaylistName");
-    const newPlBtn      = document.getElementById("newPlaylistBtn");
+    const shuffleBtn    = document.getElementById('shuffleBtn');
+    const autoplayBtn   = document.getElementById('autoplayBtn');
+    const newPlInp      = document.getElementById('newPlaylistName');
+    const newPlBtn      = document.getElementById('newPlaylistBtn');
+    const ytCodeInput   = document.getElementById('ytCode');
+    const playBtn       = document.getElementById('playBtn');
+    const addBtn        = document.getElementById('addToPlaylistBtn');
 
-    const ytCodeInput   = document.getElementById("ytCode");
-    const playBtn       = document.getElementById("playBtn");
-    const addBtn        = document.getElementById("addToPlaylistBtn");
+    /* ==================== Persistence ==================== */
+    function saveData() {
+      localStorage.setItem(LS_KEY, JSON.stringify({playlists, history, autoplay, shuffle}));
+    }
+    function loadData() {
+      try {
+        const data = JSON.parse(localStorage.getItem(LS_KEY));
+        if(!data) return;
+        playlists = data.playlists||[];
+        history   = data.history||[];
+        autoplay  = data.autoplay||false;
+        shuffle   = data.shuffle||false;
+      }catch{}
+    }
 
-    /*** ========= Initialization ========= ***/
-    loadData();
-    renderAll();
-
-    // default to No playlist (discovery) mode
-    setCurrentPlaylist(null);
-
-    /*** ========= YT IFrame API ========= ***/
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("ytPlayer", {
-        height: "100%",
-        width: "100%",
-        videoId: "",
-        playerVars: { rel: 0 },
-        events: {
-          onStateChange: onPlayerStateChange
-        }
+    /* ==================== YouTube API ==================== */
+    window.onYouTubeIframeAPIReady = () => {
+      player = new YT.Player('ytPlayer', {
+        height: '110',
+        width: '100%',
+        videoId: '',
+        playerVars: { rel:0 },
+        events: { onStateChange: onPlayerStateChange }
       });
-    }
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    };
 
-    function onPlayerStateChange(event) {
-      if (event.data === YT.PlayerState.ENDED && autoplay && currentPlaylist && currentPlaylist.songs.length) {
-        playNext();
-      }
+    function onPlayerStateChange(e){
+      if(e.data === YT.PlayerState.ENDED && autoplay) handleTrackEnd();
     }
 
-    /*** ========= Renderers ========= ***/
-    function renderAll() {
-      renderPlaylists();
-      renderCurrentPlaylist();
-      renderHistory();
-      updateButtons();
+    function handleTrackEnd(){
+      if(!currentPlaylist||!currentPlaylist.songs.length) return;
+      if(shuffle){ currentIndex = Math.floor(Math.random()*currentPlaylist.songs.length); }
+      else { currentIndex = (currentIndex+1) % currentPlaylist.songs.length; }
+      const next = currentPlaylist.songs[currentIndex];
+      playVideo(next.id);
+      renderCurrent();
     }
 
-    function renderPlaylists() {
-      playlistsList.innerHTML = "";
-      // pseudo playlist for discovery
-      const noLi = createPlaylistLi({name:'No playlist'});
-      playlistsList.appendChild(noLi);
+    /* ==================== Rendering ==================== */
+    function renderAll(){ renderPlaylists(); renderCurrent(); renderHistory(); updateButtons(); }
 
-      playlists.forEach(pl => {
-        const li = createPlaylistLi(pl);
-        playlistsList.appendChild(li);
-      });
+    function renderPlaylists(){
+      playlistsList.innerHTML = '';
+      // No playlist entry
+      playlistsList.appendChild(createPlaylistLi({name:'No playlist'}));
+      playlists.forEach(pl=> playlistsList.appendChild(createPlaylistLi(pl)) );
     }
 
-    function createPlaylistLi(plObj) {
-      const li = document.createElement("li");
-      li.textContent = plObj.name;
-      if (currentPlaylist === plObj || (plObj.name==='No playlist' && !currentPlaylist)) li.classList.add("selected");
-      li.addEventListener("click", () => {
-        if (plObj.name === 'No playlist') setCurrentPlaylist(null); else setCurrentPlaylist(plObj);
-      });
-      // delete on dblclick (not No playlist)
-      if (plObj !== null && plObj.name !== 'No playlist') {
-        li.addEventListener("dblclick", () => {
-          if (confirm(`Delete playlist "${plObj.name}"?`)) {
-            playlists = playlists.filter(p => p !== plObj);
-            if (currentPlaylist === plObj) setCurrentPlaylist(null);
-            saveData();
-            renderAll();
-          }
-        });
+    function createPlaylistLi(pl){
+      const li=document.createElement('li');
+      li.textContent=pl.name;
+      if( (pl.name==='No playlist' && !currentPlaylist) || currentPlaylist===pl) li.classList.add('selected');
+      li.addEventListener('click',()=>{ setCurrentPlaylist(pl.name==='No playlist'?null:pl); });
+      if(pl.name!=='No playlist'){
+        li.addEventListener('dblclick',()=>{ if(confirm(`Delete playlist "${pl.name}"?`)){ playlists=playlists.filter(p=>p!==pl); if(currentPlaylist===pl) setCurrentPlaylist(null); saveData(); renderAll(); } });
       }
       return li;
     }
 
-    function renderCurrentPlaylist() {
-      currentList.innerHTML = "";
-      currentTitle.textContent = currentPlaylist ? currentPlaylist.name : 'Current Playlist (none)';
-      if (!currentPlaylist) return;
-      currentPlaylist.songs.forEach((s,i) => {
-        const li = document.createElement("li");
-        li.textContent = s.title;
-        if (i === currentIndex) li.classList.add("selected");
-        li.addEventListener("click", () => {
-          currentIndex = i;
-          playVideo(s.id);
-          renderCurrentPlaylist();
-        });
-        li.addEventListener("dblclick", () => {
-          if (confirm("Remove this song from playlist?")) {
-            currentPlaylist.songs.splice(i,1);
-            if (currentIndex >= currentPlaylist.songs.length) currentIndex = currentPlaylist.songs.length-1;
-            saveData();
-            renderCurrentPlaylist();
-          }
-        });
+    function renderCurrent(){
+      currentList.innerHTML='';
+      currentTitle.textContent=currentPlaylist?currentPlaylist.name:'Current Playlist (none)';
+      if(!currentPlaylist) return;
+      currentPlaylist.songs.forEach((s,i)=>{
+        const li=document.createElement('li');
+        li.textContent=s.title;
+        if(i===currentIndex) li.classList.add('selected');
+        li.addEventListener('click',()=>{ currentIndex=i; playVideo(s.id); renderCurrent(); });
+        li.addEventListener('dblclick',()=>{ if(confirm('Remove track?')){ currentPlaylist.songs.splice(i,1); if(currentIndex>=currentPlaylist.songs.length) currentIndex=currentPlaylist.songs.length-1; saveData(); renderCurrent(); }});
         currentList.appendChild(li);
       });
     }
 
-    function renderHistory() {
-      historyList.innerHTML = "";
-      history.forEach(({id,title}) => {
-        const li = document.createElement("li");
-        li.textContent = title;
-        li.title = title;
-        li.addEventListener("click", ()=> playVideo(id));
+    function renderHistory(){
+      historyList.innerHTML='';
+      history.forEach(({id,title})=>{
+        const li=document.createElement('li');
+        li.textContent=title; li.title=title;
+        li.addEventListener('click',()=>playVideo(id));
+        // Double‑tap / double‑click to delete
+        li.addEventListener('dblclick',()=>{ removeHistory(id); });
+        let lastTap=0;
+        li.addEventListener('touchend',e=>{
+          const now=Date.now();
+          if(now-lastTap<300){ removeHistory(id); }
+          lastTap=now;
+        });
         historyList.appendChild(li);
       });
     }
 
-    function updateButtons() {
-      autoplayBtn.textContent = `Autoplay: ${autoplay ? 'On':'Off'}`;
-      autoplayBtn.classList.toggle('toggled', autoplay);
-      shuffleBtn.classList.toggle('toggled', shuffle);
+    function updateButtons(){
+      autoplayBtn.textContent=`Autoplay: ${autoplay?'On':'Off'}`;
+      autoplayBtn.classList.toggle('toggled',autoplay);
+      shuffleBtn.classList.toggle('toggled',shuffle);
     }
 
-    /*** ========= Actions ========= ***/
-    function setCurrentPlaylist(pl) {
-      currentPlaylist = pl; currentIndex = -1; renderAll();
+    /* ==================== Helpers ==================== */
+    async function fetchTitle(id){
+      try{ const res=await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`); if(!res.ok) throw 0; const data=await res.json(); return data.title||id; }catch{ return id; }
     }
 
-    async function addCodeToPlaylist(code) {
-      if (!currentPlaylist) { alert("Select a playlist first"); return; }
-      const title = await fetchTitle(code);
-      currentPlaylist.songs.push({id:code,title});
-      saveData();
-      renderCurrentPlaylist();
+    function addToHistory(id,title){
+      history=history.filter(h=>h.id!==id);
+      history.unshift({id,title});
+      if(history.length>200) history.pop();
     }
 
-    function playVideo(id) {
-      if (!player) return;
-      player.loadVideoById(id);
-      // update history
-      fetchTitle(id).then(title => {
-        history = history.filter(h=>h.id!==id);
-        history.unshift({id,title});
-        if (history.length>200) history.pop();
-        saveData();
-        renderHistory();
-      });
+    function removeHistory(id){ history=history.filter(h=>h.id!==id); saveData(); renderHistory(); }
+
+    function setCurrentPlaylist(pl){ currentPlaylist=pl; currentIndex=-1; renderAll(); }
+
+    function playVideo(id){ if(!player) return; player.loadVideoById(id);
+      fetchTitle(id).then(title=>{ addToHistory(id,title); saveData(); renderHistory(); });
     }
 
-    function playNext() {
-      if (!currentPlaylist || !currentPlaylist.songs.length) return;
-      if (shuffle) {
-        currentIndex = Math.floor(Math.random()*currentPlaylist.songs.length);
-      } else {
-        currentIndex = (currentIndex+1) % currentPlaylist.songs.length;
-      }
-      const next = currentPlaylist.songs[currentIndex];
-      playVideo(next.id);
-      renderCurrentPlaylist();
+    function toggleAutoplay(){ autoplay=!autoplay; updateButtons(); saveData(); }
+    function toggleShuffle(){ shuffle=!shuffle; updateButtons(); saveData(); }
+
+    /* ==================== Actions ==================== */
+    async function handleAddCurrent(){
+      if(!currentPlaylist){ alert('Select a playlist first'); return; }
+      const data=player?.getVideoData();
+      const id=data?.video_id;
+      if(!id){ alert('No video currently playing'); return; }
+      const title=data?.title||await fetchTitle(id);
+      currentPlaylist.songs.push({id,title});
+      saveData(); renderCurrent();
     }
 
-    function toggleAutoplay() { autoplay = !autoplay; updateButtons(); saveData(); }
-    function toggleShuffle() { shuffle = !shuffle; updateButtons(); }
+    async function handlePlayInput(){
+      const code=ytCodeInput.value.trim(); if(!code) return; playVideo(code); ytCodeInput.value=''; }
 
-    /*** ========= Helpers ========= */
-    async function fetchTitle(id) {
-      try {
-        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        return data.title || id;
-      } catch { return id; }
-    }
+    /* ==================== Event binding ==================== */
+    loadData();
+    renderAll();
 
-    function saveData() {
-      const blob = {playlists, history, autoplay, shuffle};
-      localStorage.setItem(lsKEY, JSON.stringify(blob));
-    }
-    function loadData() {
-      try {
-        const blob = JSON.parse(localStorage.getItem(lsKEY));
-        if (blob) {
-          playlists = blob.playlists||[];
-          history   = blob.history||[];
-          autoplay  = blob.autoplay||false;
-          shuffle   = blob.shuffle||false;
-        }
-      } catch {}
-    }
-
-    /*** ========= Event wiring ========= */
-    shuffleBtn.addEventListener('click', ()=> { toggleShuffle(); });
-    autoplayBtn.addEventListener('click', ()=> { toggleAutoplay(); });
-    newPlBtn.addEventListener('click', ()=> {
-      const name = newPlNameInp.value.trim(); if(!name) return;
-      if (playlists.some(p=>p.name===name)) { alert('Playlist already exists'); return; }
-      playlists.push({name, songs:[]});
-      newPlNameInp.value=''; saveData(); renderPlaylists();
+    shuffleBtn.addEventListener('click',toggleShuffle);
+    autoplayBtn.addEventListener('click',toggleAutoplay);
+    newPlBtn.addEventListener('click',()=>{
+      const name=newPlInp.value.trim(); if(!name) return;
+      if(playlists.some(p=>p.name.toLowerCase()===name.toLowerCase())){ alert('Playlist exists'); return; }
+      playlists.push({name, songs:[]}); newPlInp.value=''; saveData(); renderPlaylists();
     });
 
-    playBtn.addEventListener('click', ()=> {
-      const code = ytCodeInput.value.trim(); if(!code) return;
-      playVideo(code); ytCodeInput.value='';
-    });
-
-    addBtn.addEventListener('click', ()=> {
-      const code = ytCodeInput.value.trim(); if(!code) return;
-      addCodeToPlaylist(code); ytCodeInput.value='';
-    });
-
-    ytCodeInput.addEventListener('keypress', e=> { if(e.key==='Enter') playBtn.click(); });
+    playBtn.addEventListener('click',handlePlayInput);
+    ytCodeInput.addEventListener('keypress',e=>{ if(e.key==='Enter') handlePlayInput(); });
+    addBtn.addEventListener('click',handleAddCurrent);
   </script>
 </body>
 </html>
