@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matt's Music Embedder 4.2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Fugaz+One&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --border: 2px solid #000;
+      --accent: #0077ff;
+      --accent-dark: #005ecc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin:0; padding:1.25rem;
+      display:flex; justify-content:center;
+      background:#f9f9f9; font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #app {
+      border:var(--border); background:#fff; padding:1.5rem; width:100%; max-width:1100px;
+    }
+
+    h1 { text-align:center; margin-top:0; font-size:2.1rem; user-select:none; }
+    .music-word { font-family:'Fugaz One', sans-serif; font-style:italic; letter-spacing:1px; }
+
+    /* ===================== Player ===================== */
+    .player { border:var(--border); margin-bottom:1.2rem; position:relative; padding-top:56.25%; }
+    #ytPlayer { position:absolute; inset:0; }
+
+    /* ===================== Lists ===================== */
+    .lists {
+      display:flex; gap:1rem; flex-wrap:wrap;
+    }
+    .lists > div {
+      flex:1 1 260px; border:var(--border); display:flex; flex-direction:column; max-height:380px;
+    }
+    .lists h2 { margin:0; padding:0.5rem 0.75rem; border-bottom:1px solid #ddd; font-size:1.25rem; }
+    ul {
+      list-style:none; margin:0; padding:0; overflow-y:auto;
+    }
+    li {
+      padding:0.45rem 0.6rem; cursor:pointer; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;
+      user-select:none; border-bottom:1px solid #efefef; transition:background 0.15s;
+    }
+    li:hover { background:#f0f8ff; }
+    li.selected { background:var(--accent); color:#fff; }
+
+    /* ===================== Controls ===================== */
+    .controls, .bottom-row {
+      display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem; justify-content:center;
+    }
+    button, input[type="text"] {
+      padding:0.55rem 1rem; font-size:1rem; border:var(--border); background:#fff; cursor:pointer;
+    }
+    button { background:var(--accent); color:#fff; border:none; transition:background 0.2s; }
+    button:hover { background:var(--accent-dark); }
+    button.toggled { background:#666; }
+    input[type="text"] { flex:1 1 220px; min-width:160px; }
+    .wide-input { flex:1 1 100%; }
+
+    @media(max-width:768px) {
+      .lists { flex-direction:column; }
+      .lists > div { max-height:220px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Matt's <span class="music-word">MUSIC</span> Embedder</h1>
+
+    <!-- YouTube Player -->
+    <div class="player"><div id="ytPlayer"></div></div>
+
+    <!-- Lists section -->
+    <div class="lists">
+      <div>
+        <h2>Playlists</h2>
+        <ul id="playlistsList"></ul>
+      </div>
+      <div>
+        <h2 id="currentTitle">Current Playlist</h2>
+        <ul id="currentList"></ul>
+      </div>
+      <div>
+        <h2>Previously Played</h2>
+        <ul id="historyList"></ul>
+      </div>
+    </div>
+
+    <!-- Control buttons -->
+    <div class="controls">
+      <button id="shuffleBtn">Shuffle</button>
+      <button id="autoplayBtn">Autoplay: Off</button>
+      <input id="newPlaylistName" type="text" placeholder="playlist name" />
+      <button id="newPlaylistBtn">new playlist</button>
+    </div>
+
+    <!-- Bottom input row -->
+    <div class="bottom-row">
+      <input id="ytCode" class="wide-input" type="text" placeholder="Enter YouTube code (e.g. dQw4w9WgXcQ)" autocomplete="off" />
+      <button id="playBtn">Play</button>
+      <button id="addToPlaylistBtn">add to playlist</button>
+    </div>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    /*** ========= State ========= ***/
+    let player;
+    let playlists = [];              // [{name, songs:[{id,title}]}]
+    let history = [];                // array of {id,title}
+    let currentPlaylist = null;      // playlist object or null for no playlist
+    let currentIndex = -1;           // index within currentPlaylist.songs
+    let autoplay = false;
+    let shuffle = false;
+
+    const lsKEY = "ytMusicEmbedderData_v42";
+
+    /*** ========= DOM ========= ***/
+    const playlistsList = document.getElementById("playlistsList");
+    const currentList   = document.getElementById("currentList");
+    const historyList   = document.getElementById("historyList");
+    const currentTitle  = document.getElementById("currentTitle");
+
+    const shuffleBtn    = document.getElementById("shuffleBtn");
+    const autoplayBtn   = document.getElementById("autoplayBtn");
+    const newPlNameInp  = document.getElementById("newPlaylistName");
+    const newPlBtn      = document.getElementById("newPlaylistBtn");
+
+    const ytCodeInput   = document.getElementById("ytCode");
+    const playBtn       = document.getElementById("playBtn");
+    const addBtn        = document.getElementById("addToPlaylistBtn");
+
+    /*** ========= Initialization ========= ***/
+    loadData();
+    renderAll();
+
+    // default to No playlist (discovery) mode
+    setCurrentPlaylist(null);
+
+    /*** ========= YT IFrame API ========= ***/
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("ytPlayer", {
+        height: "100%",
+        width: "100%",
+        videoId: "",
+        playerVars: { rel: 0 },
+        events: {
+          onStateChange: onPlayerStateChange
+        }
+      });
+    }
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.ENDED && autoplay && currentPlaylist && currentPlaylist.songs.length) {
+        playNext();
+      }
+    }
+
+    /*** ========= Renderers ========= ***/
+    function renderAll() {
+      renderPlaylists();
+      renderCurrentPlaylist();
+      renderHistory();
+      updateButtons();
+    }
+
+    function renderPlaylists() {
+      playlistsList.innerHTML = "";
+      // pseudo playlist for discovery
+      const noLi = createPlaylistLi({name:'No playlist'});
+      playlistsList.appendChild(noLi);
+
+      playlists.forEach(pl => {
+        const li = createPlaylistLi(pl);
+        playlistsList.appendChild(li);
+      });
+    }
+
+    function createPlaylistLi(plObj) {
+      const li = document.createElement("li");
+      li.textContent = plObj.name;
+      if (currentPlaylist === plObj || (plObj.name==='No playlist' && !currentPlaylist)) li.classList.add("selected");
+      li.addEventListener("click", () => {
+        if (plObj.name === 'No playlist') setCurrentPlaylist(null); else setCurrentPlaylist(plObj);
+      });
+      // delete on dblclick (not No playlist)
+      if (plObj !== null && plObj.name !== 'No playlist') {
+        li.addEventListener("dblclick", () => {
+          if (confirm(`Delete playlist "${plObj.name}"?`)) {
+            playlists = playlists.filter(p => p !== plObj);
+            if (currentPlaylist === plObj) setCurrentPlaylist(null);
+            saveData();
+            renderAll();
+          }
+        });
+      }
+      return li;
+    }
+
+    function renderCurrentPlaylist() {
+      currentList.innerHTML = "";
+      currentTitle.textContent = currentPlaylist ? currentPlaylist.name : 'Current Playlist (none)';
+      if (!currentPlaylist) return;
+      currentPlaylist.songs.forEach((s,i) => {
+        const li = document.createElement("li");
+        li.textContent = s.title;
+        if (i === currentIndex) li.classList.add("selected");
+        li.addEventListener("click", () => {
+          currentIndex = i;
+          playVideo(s.id);
+          renderCurrentPlaylist();
+        });
+        li.addEventListener("dblclick", () => {
+          if (confirm("Remove this song from playlist?")) {
+            currentPlaylist.songs.splice(i,1);
+            if (currentIndex >= currentPlaylist.songs.length) currentIndex = currentPlaylist.songs.length-1;
+            saveData();
+            renderCurrentPlaylist();
+          }
+        });
+        currentList.appendChild(li);
+      });
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+      history.forEach(({id,title}) => {
+        const li = document.createElement("li");
+        li.textContent = title;
+        li.title = title;
+        li.addEventListener("click", ()=> playVideo(id));
+        historyList.appendChild(li);
+      });
+    }
+
+    function updateButtons() {
+      autoplayBtn.textContent = `Autoplay: ${autoplay ? 'On':'Off'}`;
+      autoplayBtn.classList.toggle('toggled', autoplay);
+      shuffleBtn.classList.toggle('toggled', shuffle);
+    }
+
+    /*** ========= Actions ========= ***/
+    function setCurrentPlaylist(pl) {
+      currentPlaylist = pl; currentIndex = -1; renderAll();
+    }
+
+    async function addCodeToPlaylist(code) {
+      if (!currentPlaylist) { alert("Select a playlist first"); return; }
+      const title = await fetchTitle(code);
+      currentPlaylist.songs.push({id:code,title});
+      saveData();
+      renderCurrentPlaylist();
+    }
+
+    function playVideo(id) {
+      if (!player) return;
+      player.loadVideoById(id);
+      // update history
+      fetchTitle(id).then(title => {
+        history = history.filter(h=>h.id!==id);
+        history.unshift({id,title});
+        if (history.length>200) history.pop();
+        saveData();
+        renderHistory();
+      });
+    }
+
+    function playNext() {
+      if (!currentPlaylist || !currentPlaylist.songs.length) return;
+      if (shuffle) {
+        currentIndex = Math.floor(Math.random()*currentPlaylist.songs.length);
+      } else {
+        currentIndex = (currentIndex+1) % currentPlaylist.songs.length;
+      }
+      const next = currentPlaylist.songs[currentIndex];
+      playVideo(next.id);
+      renderCurrentPlaylist();
+    }
+
+    function toggleAutoplay() { autoplay = !autoplay; updateButtons(); saveData(); }
+    function toggleShuffle() { shuffle = !shuffle; updateButtons(); }
+
+    /*** ========= Helpers ========= */
+    async function fetchTitle(id) {
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        return data.title || id;
+      } catch { return id; }
+    }
+
+    function saveData() {
+      const blob = {playlists, history, autoplay, shuffle};
+      localStorage.setItem(lsKEY, JSON.stringify(blob));
+    }
+    function loadData() {
+      try {
+        const blob = JSON.parse(localStorage.getItem(lsKEY));
+        if (blob) {
+          playlists = blob.playlists||[];
+          history   = blob.history||[];
+          autoplay  = blob.autoplay||false;
+          shuffle   = blob.shuffle||false;
+        }
+      } catch {}
+    }
+
+    /*** ========= Event wiring ========= */
+    shuffleBtn.addEventListener('click', ()=> { toggleShuffle(); });
+    autoplayBtn.addEventListener('click', ()=> { toggleAutoplay(); });
+    newPlBtn.addEventListener('click', ()=> {
+      const name = newPlNameInp.value.trim(); if(!name) return;
+      if (playlists.some(p=>p.name===name)) { alert('Playlist already exists'); return; }
+      playlists.push({name, songs:[]});
+      newPlNameInp.value=''; saveData(); renderPlaylists();
+    });
+
+    playBtn.addEventListener('click', ()=> {
+      const code = ytCodeInput.value.trim(); if(!code) return;
+      playVideo(code); ytCodeInput.value='';
+    });
+
+    addBtn.addEventListener('click', ()=> {
+      const code = ytCodeInput.value.trim(); if(!code) return;
+      addCodeToPlaylist(code); ytCodeInput.value='';
+    });
+
+    ytCodeInput.addEventListener('keypress', e=> { if(e.key==='Enter') playBtn.click(); });
+  </script>
+</body>
+</html>
