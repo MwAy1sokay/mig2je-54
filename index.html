@@ -4,126 +4,73 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matt's Music Embedder 5.4</title>
-
-  <!-- Title font + Material Symbols -->
-  <link href="https://fonts.googleapis.com/css2?family=Fugaz+One&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet">
-
+  <title>Matt's Music Embedder 5.2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fugaz+One&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
   <style>
-    :root{
-      --bg-body:#1e1e1e;   --bg-main:#262626;   --fg:#e7e7e7;
-      --accent:#4d7dff;    --accent-hov:#6990ff; --border:#333;
-      --radius:8px;        --shadow:0 0 10px rgba(0,0,0,.45);
+    :root {
+      --bg-body:#1e1e1e; --bg-main:#262626; --fg:#e7e7e7;
+      --accent:#4d7dff; --accent-hover:#6990ff; --border:#333;
+      --radius:8px; --shadow:0 0 10px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{margin:0;padding:0;min-height:100vh;display:flex;flex-direction:column;
-         background:var(--bg-body);color:var(--fg);font-family:Arial,Helvetica,sans-serif}
-    h1{margin:0;padding:1rem 0;text-align:center;font-size:2rem}
+    body{margin:0;padding:0;background:var(--bg-body);color:var(--fg);font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+    h1{margin:0;padding:1rem 0;text-align:center;font-size:2rem;user-select:none}
     .music-word{font-family:'Fugaz One',sans-serif;color:var(--accent);font-style:italic}
 
-    /* =========== layout =========== */
+    /* ==== layout ==== */
     #page{flex:1;display:flex;min-height:0}
-
-    /* ---- sidebar ---- */
-    #sidebar{
-      width:260px;min-width:200px;background:var(--bg-main);
-      border-right:1px solid var(--border);padding-bottom:72px;
-      display:flex;flex-direction:column;transition:transform .35s ease;
-    }
+    #sidebar{width:260px;min-width:200px;background:var(--bg-main);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform .35s ease}
     #sidebar.collapsed{transform:translateX(-100%)}
-    #sidebar h2{
-      margin:0;padding:.8rem 1rem;font-size:1.1rem;border-bottom:1px solid var(--border);
-      display:flex;justify-content:space-between;align-items:center
-    }
-    #playlists{flex:1;overflow-y:auto;list-style:none;margin:0;padding:0}
-    #playlists li{padding:.55rem .9rem;border-bottom:1px solid #2f2f2f;cursor:pointer;
-                  white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    #sidebar h2{margin:0;padding:.8rem 1rem;font-size:1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    #playlists{flex:1;overflow-y:auto;margin:0;padding:0;list-style:none}
+    #playlists li{padding:.55rem .9rem;border-bottom:1px solid #2f2f2f;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:pointer}
     #playlists li:hover{background:#ffffff14}
     #playlists li.selected{background:var(--accent);color:#fff}
-
-    #add-playlist-area{
-      position:absolute;bottom:0;left:0;right:0;
-      padding:.6rem 1rem;border-top:1px solid var(--border);
-      background:var(--bg-main);display:flex;gap:.45rem
-    }
-    #newPlaylistName{flex:1;padding:.45rem .7rem;border:1px solid var(--border);
-                     border-radius:4px;background:#00000044;color:var(--fg)}
-    .icon-btn{
-      background:none;border:none;color:var(--fg);cursor:pointer;
-      font-size:1.7rem;line-height:1;padding:.25rem;border-radius:4px
-    }
+    #add-playlist-area{padding:.6rem 1rem;border-top:1px solid var(--border);display:flex;gap:.45rem}
+    #newPlaylistName{flex:1;padding:.45rem .7rem;border:1px solid var(--border);border-radius:4px;background:#00000044;color:var(--fg)}
+    .icon-btn{background:none;border:none;color:var(--fg);cursor:pointer;font-size:1.7rem;line-height:1;padding:.25rem;border-radius:4px}
     .icon-btn:hover{background:#ffffff18}
 
-    /* opener button when sidebar hidden */
-    #sidebarOpener{
-      position:fixed;top:110px;left:4px;display:none;z-index:50;
-      background:var(--bg-main);border:1px solid var(--border);border-radius:4px;padding:.15rem
-    }
+    /* floating sidebar opener */
+    #sidebarOpener{position:fixed;top:110px;left:4px;background:var(--bg-main);border:1px solid var(--border);border-radius:4px;padding:.15rem;display:none;z-index:50}
+    #sidebarOpener .material-symbols-outlined{font-size:1.6rem}
 
-    /* ---- main ---- */
-    #content{flex:1;display:flex;flex-direction:column;background:var(--bg-main)}
+    /* ==== main ==== */
+    #content{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg-main)}
     #input-bar{padding:.8rem 1rem;border-bottom:1px solid var(--border);display:flex;gap:.6rem}
-    #ytCode{flex:1;padding:.55rem .8rem;border:1px solid var(--border);
-            border-radius:4px;background:#00000044;color:var(--fg)}
+    #ytCode{flex:1;padding:.55rem .8rem;border:1px solid var(--border);border-radius:4px;background:#00000044;color:var(--fg)}
 
-    #lists-wrap{
-      flex:1;display:flex;gap:1rem;padding:1rem;overflow:hidden;min-height:0
-    }
-    .panel{
-      flex:1;background:#00000026;border:1px solid var(--border);border-radius:var(--radius);
-      display:flex;flex-direction:column;min-height:0
-    }
+    #lists-wrap{flex:1;display:flex;gap:1rem;padding:1rem;min-height:0;overflow:hidden}
+    .panel{flex:1;background:#00000026;border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;min-height:0}
     .panel h3{margin:0;padding:.6rem .9rem;font-size:1.05rem;border-bottom:1px solid var(--border)}
-    .panel ul{flex:1;margin:0;padding:0;overflow-y:auto;list-style:none}
-    .panel li{padding:.5rem .8rem;border-bottom:1px solid #2f2f2f;cursor:pointer;
-              white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    .panel ul{flex:1;margin:0;padding:0;list-style:none;overflow-y:auto}
+    .panel li{padding:.5rem .8rem;border-bottom:1px solid #2f2f2f;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:pointer}
     .panel li:hover{background:#ffffff14}
     .panel li.selected{background:var(--accent);color:#fff}
 
-    /* ---- footer ---- */
-    #player-footer{
-      position:fixed;left:0;right:0;bottom:0;
-      background:var(--bg-main);border-top:1px solid var(--border);
-      display:flex;align-items:center;gap:.8rem;padding:.55rem 1rem;
-      box-shadow:var(--shadow);z-index:40
-    }
+    /* ==== now-playing footer ==== */
+    #player-footer{position:fixed;bottom:0;left:0;right:0;background:var(--bg-main);border-top:1px solid var(--border);display:flex;align-items:center;gap:.8rem;padding:.5rem 1rem;box-shadow:var(--shadow);z-index:40}
     #thumb{width:48px;height:48px;border-radius:4px;object-fit:cover;background:#00000055}
     #transport{display:flex;gap:.2rem}
-    .ctrl-btn{
-      background:none;border:none;color:var(--fg);font-size:1.9rem;
-      line-height:1;padding:.25rem .35rem;border-radius:4px;cursor:pointer
-    }
+    .ctrl-btn{background:none;border:none;color:var(--fg);font-size:1.9rem;line-height:1;padding:.25rem .35rem;border-radius:4px;cursor:pointer}
     .ctrl-btn:hover{background:#ffffff18}
-    #np-info{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    #gearPopover{
-      position:absolute;bottom:110%;right:1rem;display:none;
-      background:var(--bg-main);border:1px solid var(--border);border-radius:6px;
-      padding:.6rem 1rem;flex-direction:column;gap:.4rem;z-index:45
-    }
+    #np-info{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+    #gearPopover{position:absolute;bottom:110%;right:1rem;background:var(--bg-main);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;display:none;flex-direction:column;gap:.4rem;z-index:45}
     #gearPopover label{display:flex;align-items:center;gap:.55rem;font-size:.9rem}
     #gearPopover input{accent-color:var(--accent)}
 
-    /* ---- history drawer ---- */
-    #historyDrawer{
-      position:fixed;left:0;right:0;bottom:-65%;height:65%;
-      background:var(--bg-main);border-top:1px solid var(--border);
-      border-radius:8px 8px 0 0;display:flex;flex-direction:column;
-      transition:bottom .35s;z-index:35
-    }
+    /* ==== history drawer ==== */
+    #historyDrawer{position:fixed;left:0;right:0;bottom:-65%;height:65%;background:var(--bg-main);border-top:1px solid var(--border);border-radius:8px 8px 0 0;display:flex;flex-direction:column;transition:bottom .35s;z-index:35}
     #historyDrawer.open{bottom:0}
-    #drawer-handle{height:34px;display:flex;justify-content:center;align-items:center;cursor:pointer}
+    #drawer-handle{height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
     #drawer-handle span{width:46px;height:4px;background:#555;border-radius:2px}
     #historyList{flex:1;overflow-y:auto;list-style:none;margin:0;padding:0 0 .4rem 0}
-    #historyList li{padding:.55rem 1rem;border-bottom:1px solid #2f2f2f;
-                    white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    #historyList li{padding:.55rem 1rem;border-bottom:1px solid #2f2f2f;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
     #historyList li:hover{background:#ffffff14}
 
-    /* mobile tweaks */
     @media(max-width:760px){
       #lists-wrap{flex-direction:column;padding:.6rem}
-      #sidebar{position:fixed;z-index:50;top:0;bottom:0}
+      #sidebar{position:fixed;top:0;bottom:0;z-index:50}
       #sidebarOpener{display:block}
     }
   </style>
@@ -131,28 +78,24 @@
 <body>
   <h1>Matt's <span class="music-word">MUSIC</span> Embedder</h1>
 
-  <!-- sidebar opener -->
-  <button id="sidebarOpener" class="icon-btn">
-    <span class="material-symbols-outlined">chevron_right</span>
-  </button>
+  <!-- floating sidebar opener -->
+  <button id="sidebarOpener" class="icon-btn"><span class="material-symbols-outlined">chevron_right</span></button>
 
   <div id="page">
-    <!-- === Sidebar === -->
+    <!-- ============ Sidebar ============ -->
     <aside id="sidebar">
       <h2>
         Playlists
-        <button id="sidebarToggle" class="icon-btn material-symbols-outlined">chevron_left</button>
+        <button id="sidebarToggle" class="icon-btn material-symbols-outlined" title="Hide">chevron_left</button>
       </h2>
-
       <ul id="playlists"></ul>
-
       <div id="add-playlist-area">
         <input id="newPlaylistName" placeholder="name" />
-        <button id="newPlBtn" class="icon-btn material-symbols-outlined">add</button>
+        <button id="newPlBtn" class="icon-btn material-symbols-outlined" title="Create playlist">add</button>
       </div>
     </aside>
 
-    <!-- === Main === -->
+    <!-- ============ Main ============ -->
     <main id="content">
       <div id="input-bar">
         <input id="ytCode" placeholder="Paste YouTube code & hit ↵" autocomplete="off" />
@@ -163,7 +106,6 @@
           <h3 id="currentPlTitle">Current Playlist (none)</h3>
           <ul id="currentList"></ul>
         </section>
-
         <section class="panel" style="flex:1">
           <h3>Recently Played (session)</h3>
           <ul id="recentList"></ul>
@@ -172,33 +114,33 @@
     </main>
   </div>
 
-  <!-- === Footer / Now Playing === -->
+  <!-- ============ Now-playing footer ============ -->
   <footer id="player-footer">
     <img id="thumb" alt="thumb" />
 
     <div id="transport">
-      <button id="prevTrack" class="ctrl-btn material-symbols-outlined">skip_previous</button>
-      <button id="rewBtn"   class="ctrl-btn material-symbols-outlined">fast_rewind</button>
-      <button id="playPause"class="ctrl-btn material-symbols-outlined">play_arrow</button>
-      <button id="fwdBtn"   class="ctrl-btn material-symbols-outlined">fast_forward</button>
-      <button id="nextTrack"class="ctrl-btn material-symbols-outlined">skip_next</button>
+      <button id="prevTrack"   class="ctrl-btn material-symbols-outlined" title="Previous track">skip_previous</button>
+      <button id="rewBtn"      class="ctrl-btn material-symbols-outlined" title="Rewind 10s">fast_rewind</button>
+      <button id="playPause"   class="ctrl-btn material-symbols-outlined" title="Play/Pause">play_arrow</button>
+      <button id="fwdBtn"      class="ctrl-btn material-symbols-outlined" title="Forward 10s">fast_forward</button>
+      <button id="nextTrack"   class="ctrl-btn material-symbols-outlined" title="Next track">skip_next</button>
     </div>
 
     <div id="np-info">Nothing playing</div>
 
-    <button id="addCurrent" class="icon-btn material-symbols-outlined">playlist_add</button>
-    <button id="gearBtn" class="icon-btn material-symbols-outlined">settings</button>
+    <button id="addCurrent" class="icon-btn material-symbols-outlined" title="Add to playlist">playlist_add</button>
+    <button id="gearBtn" class="icon-btn material-symbols-outlined" title="Playback options">settings</button>
 
     <div id="gearPopover">
-      <label><input type="checkbox" id="chkAutoplay" /> Autoplay</label>
-      <label><input type="checkbox" id="chkShuffle" /> Shuffle</label>
+      <label><input type="checkbox" id="chkAutoplay"> Autoplay</label>
+      <label><input type="checkbox" id="chkShuffle"> Shuffle</label>
     </div>
 
-    <!-- hidden YT iframe -->
+    <!-- hidden YouTube container -->
     <div id="yt-holder" style="width:0;height:0;overflow:hidden;position:absolute"></div>
   </footer>
 
-  <!-- === History drawer === -->
+  <!-- ============ History drawer ============ -->
   <div id="historyDrawer">
     <div id="drawer-handle"><span></span></div>
     <ul id="historyList"></ul>
@@ -206,275 +148,110 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    /* ---------- state ---------- */
+    /* ========== STATE ========== */
     let player;
-    let playlists = [];
-    let history   = [];
-    let recents   = [];
+    let playlists=[]; let history=[];
+    let currentPlaylist=null; let currentIndex=-1;
+    let autoplay=false; let shuffle=false;
+    let recents=[]; // session only
 
-    let currentPlaylist = null;
-    let currentIndex    = -1;
+    const LS_KEY='mme_v52';
 
-    let autoplay = false;
-    let shuffle  = false;
+    /* ========== DOM refs ========== */
+    const sidebar=document.getElementById('sidebar');
+    const sidebarToggle=document.getElementById('sidebarToggle');
+    const sidebarOpener=document.getElementById('sidebarOpener');
+    const playlistsEl=document.getElementById('playlists');
+    const newPlName=document.getElementById('newPlaylistName');
+    const newPlBtn=document.getElementById('newPlBtn');
 
-    const LS_KEY = 'mme_v54';
+    const ytCodeInput=document.getElementById('ytCode');
+    const currentList=document.getElementById('currentList');
+    const currentPlTitle=document.getElementById('currentPlTitle');
+    const recentList=document.getElementById('recentList');
 
-    /* ---------- basic helpers ---------- */
-    const S = id => document.getElementById(id);
-    const cleanId = id => id.split(/[?&]/)[0].replace(/[^\\w-]/g,'');     // strip junk from a YouTube ID
+    const histDrawer=document.getElementById('historyDrawer');
+    const histHandle=document.getElementById('drawer-handle');
+    const histList=document.getElementById('historyList');
 
-    async function fetchTitle(id){
-      try{
-        const d = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`)
-                       .then(r=>r.json());
-        return d.title || id;
-      }catch{ return id; }
-    }
-    function setThumb(id){
-      const hq = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-      const def= `https://i.ytimg.com/vi/${id}/default.jpg`;
-      const img = S('thumb');
-      img.onerror = ()=>{ img.onerror=null; img.src=def; };
-      img.src = hq;
-    }
+    const npInfo=document.getElementById('np-info');
+    const thumb=document.getElementById('thumb');
+    const playPauseBtn=document.getElementById('playPause');
+    const prevBtn=document.getElementById('prevTrack');
+    const nextBtn=document.getElementById('nextTrack');
+    const rewBtn=document.getElementById('rewBtn');
+    const fwdBtn=document.getElementById('fwdBtn');
+    const addCurrentBtn=document.getElementById('addCurrent');
 
-    /* ---------- persistence ---------- */
-    function loadData(){
-      try{
-        const d = JSON.parse(localStorage.getItem(LS_KEY));
-        if(!d) return;
-        playlists = d.playlists || [];
-        history   = d.history   || [];
-        autoplay  = d.autoplay  || false;
-        shuffle   = d.shuffle   || false;
-      }catch{}
-    }
-    function saveData(){
-      localStorage.setItem(LS_KEY, JSON.stringify({playlists,history,autoplay,shuffle}));
-    }
+    const gearBtn=document.getElementById('gearBtn');
+    const gearPop=document.getElementById('gearPopover');
+    const chkAuto=document.getElementById('chkAutoplay');
+    const chkShuffle=document.getElementById('chkShuffle');
 
-    /* ---------- DOM refs ---------- */
-    const sidebar         = S('sidebar');
-    const sidebarToggle   = S('sidebarToggle');
-    const sidebarOpener   = S('sidebarOpener');
-    const playlistsEl     = S('playlists');
-    const newPlName       = S('newPlaylistName');
-    const newPlBtn        = S('newPlBtn');
+    /* ========== Persistence ========== */
+    function loadData(){ try{const d=JSON.parse(localStorage.getItem(LS_KEY)); if(!d) return; playlists=d.playlists||[]; history=d.history||[]; autoplay=d.autoplay||false; shuffle=d.shuffle||false;}catch{} }
+    function saveData(){ localStorage.setItem(LS_KEY, JSON.stringify({playlists,history,autoplay,shuffle})); }
 
-    const ytCodeInput     = S('ytCode');
-    const currentList     = S('currentList');
-    const currentPlTitle  = S('currentPlTitle');
-    const recentList      = S('recentList');
-
-    const histDrawer      = S('historyDrawer');
-    const histHandle      = S('drawer-handle');
-    const histList        = S('historyList');
-
-    const npInfo          = S('np-info');
-    const playPauseBtn    = S('playPause');
-    const prevBtn         = S('prevTrack');
-    const nextBtn         = S('nextTrack');
-    const rewBtn          = S('rewBtn');
-    const fwdBtn          = S('fwdBtn');
-    const addCurrentBtn   = S('addCurrent');
-
-    const gearBtn         = S('gearBtn');
-    const gearPop         = S('gearPopover');
-    const chkAuto         = S('chkAutoplay');
-    const chkShuffle      = S('chkShuffle');
-
-    /* ---------- YouTube API ---------- */
-    window.onYouTubeIframeAPIReady = () => {
-      player = new YT.Player('yt-holder', {
-        videoId:'',
-        playerVars:{ rel:0 },
-        events:{ onStateChange:onYTState }
-      });
+    /* ========== YouTube API ========== */
+    window.onYouTubeIframeAPIReady=()=>{
+      player=new YT.Player('yt-holder',{videoId:'',playerVars:{rel:0},events:{onStateChange:onState}});
     };
-    function onYTState(e){
-      if(e.data===YT.PlayerState.ENDED && autoplay) playNext();
-      updatePlayPauseIcon();
-    }
+    function onState(e){ if(e.data===YT.PlayerState.ENDED&&autoplay) nextTrack(); updatePlayPauseIcon(); }
 
-    /* ---------- player controls ---------- */
-    function playVideo(rawId,title){
-      const id = cleanId(rawId);
-      if(!player) return;
-
+    function playVideo(id,title){ if(!player) return;
       player.loadVideoById(id);
-      npInfo.textContent = title;
-      setThumb(id);
+      npInfo.textContent=title;
+      thumb.src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      addToHistory(id,title);
+      addToRecents(id,title);
+      updatePlayPauseIcon('pause'); }
+    function updatePlayPauseIcon(force){ const st=player?.getPlayerState(); const playing=st===YT.PlayerState.PLAYING; playPauseBtn.textContent=force? (force==='pause'?'pause':'play_arrow') : (playing?'pause':'play_arrow'); }
 
-      pushHistory(id,title);
-      pushRecents(id,title);
-      updatePlayPauseIcon('pause');
-    }
-    function pushHistory(id,title){
-      history = history.filter(h=>h.id!==id);
-      history.unshift({id,title});
-      if(history.length>200) history.pop();
-      renderHistory(); saveData();
-    }
-    function pushRecents(id,title){
-      recents = recents.filter(r=>r.id!==id);
-      recents.unshift({id,title});
-      if(recents.length>30) recents.pop();
-      renderRecents();
-    }
-    function updatePlayPauseIcon(force){
-      const state = player?.getPlayerState();
-      playPauseBtn.textContent = force
-        ? (force==='pause' ? 'pause' : 'play_arrow')
-        : (state===YT.PlayerState.PLAYING ? 'pause' : 'play_arrow');
-    }
-    function playNext(){
-      if(!currentPlaylist || !currentPlaylist.songs.length) return;
-      shuffle
-        ? currentIndex = Math.floor(Math.random()*currentPlaylist.songs.length)
-        : currentIndex = (currentIndex+1) % currentPlaylist.songs.length;
-      const n = currentPlaylist.songs[currentIndex];
-      playVideo(n.id,n.title);
-      renderMain();
-    }
-    function playPrev(){
-      if(!currentPlaylist || !currentPlaylist.songs.length){
-        player.seekTo(0); return;
-      }
-      if(shuffle){ playNext(); return; }
-      currentIndex = (currentIndex<=0) ? currentPlaylist.songs.length-1 : currentIndex-1;
-      const p = currentPlaylist.songs[currentIndex];
-      playVideo(p.id,p.title);
-      renderMain();
-    }
+    /* ========== Rendering ========== */
+    function renderSidebar(){ playlistsEl.innerHTML=''; playlistsEl.appendChild(makePlLi({name:'No playlist'})); playlists.forEach(p=>playlistsEl.appendChild(makePlLi(p))); }
+    function makePlLi(pl){ const li=document.createElement('li'); li.textContent=pl.name; if((!currentPlaylist&&pl.name==='No playlist')||currentPlaylist===pl) li.classList.add('selected'); li.addEventListener('click',()=>{currentPlaylist=pl.name==='No playlist'?null:pl; currentIndex=-1; renderMain();}); li.addEventListener('contextmenu',e=>{ if(pl.name==='No playlist') return; e.preventDefault(); if(confirm('Delete playlist?')){playlists=playlists.filter(x=>x!==pl); if(currentPlaylist===pl) currentPlaylist=null; saveData(); renderSidebar(); renderMain();}}); return li; }
 
-    /* ---------- renderers ---------- */
-    function makePlLi(pl){
-      const li=document.createElement('li');
-      li.textContent = pl.name;
-      if((!currentPlaylist && pl.name==='No playlist') || currentPlaylist===pl) li.classList.add('selected');
+    function renderMain(){ currentList.innerHTML=''; currentPlTitle.textContent=currentPlaylist?`${currentPlaylist.name} (${currentPlaylist.songs.length})`:'Current Playlist (none)'; if(currentPlaylist){ currentPlaylist.songs.forEach((s,i)=>{const li=document.createElement('li'); li.textContent=s.title; if(i===currentIndex) li.classList.add('selected'); li.addEventListener('click',()=>{currentIndex=i; playVideo(s.id,s.title); renderMain();}); li.addEventListener('contextmenu',e=>{e.preventDefault(); if(confirm('Remove?')){currentPlaylist.songs.splice(i,1); if(currentIndex>=currentPlaylist.songs.length) currentIndex=currentPlaylist.songs.length-1; saveData(); renderMain();}}); currentList.appendChild(li);}); }
+      renderRecents(); }
 
-      li.onclick = () => { currentPlaylist = (pl.name==='No playlist')? null : pl; currentIndex=-1; renderMain(); };
+    function renderRecents(){ recentList.innerHTML=''; recents.forEach(({id,title})=>{const li=document.createElement('li'); li.textContent=title; li.title=title; li.addEventListener('click',()=>playVideo(id,title)); recentList.appendChild(li);}); }
 
-      if(pl.name!=='No playlist'){
-        li.oncontextmenu = e => {
-          e.preventDefault();
-          if(confirm('Delete playlist?')){
-            playlists = playlists.filter(x=>x!==pl);
-            if(currentPlaylist===pl) currentPlaylist=null;
-            saveData(); renderSidebar(); renderMain();
-          }
-        };
-      }
-      return li;
-    }
-    function renderSidebar(){
-      playlistsEl.innerHTML='';
-      playlistsEl.appendChild(makePlLi({name:'No playlist'}));
-      playlists.forEach(pl=>playlistsEl.appendChild(makePlLi(pl)));
-    }
-    function renderMain(){
-      currentList.innerHTML='';
-      currentPlTitle.textContent = currentPlaylist
-        ? `${currentPlaylist.name} (${currentPlaylist.songs.length})`
-        : 'Current Playlist (none)';
+    function renderHistory(){ histList.innerHTML=''; history.forEach(({id,title})=>{const li=document.createElement('li'); li.textContent=title; li.title=title; li.addEventListener('click',()=>playVideo(id,title)); let last=0; li.addEventListener('touchend',()=>{const now=Date.now(); if(now-last<300){removeHistory(id);} last=now;}); li.addEventListener('dbl
+<REMAINDER OF SCRIPT>
+      li.addEventListener('dblclick',()=>removeHistory(id)); histList.appendChild(li);}); }
 
-      if(currentPlaylist){
-        currentPlaylist.songs.forEach((s,i)=>{
-          const li=document.createElement('li');
-          li.textContent = s.title;
-          i===currentIndex && li.classList.add('selected');
+    function renderAll(){ renderSidebar(); renderMain(); renderHistory(); chkAuto.checked=autoplay; chkShuffle.checked=shuffle; saveData(); }
 
-          li.onclick = () => { currentIndex=i; playVideo(s.id,s.title); renderMain(); };
-
-          li.oncontextmenu = e => {
-            e.preventDefault();
-            if(confirm('Remove track?')){
-              currentPlaylist.songs.splice(i,1);
-              if(currentIndex>=currentPlaylist.songs.length) currentIndex=currentPlaylist.songs.length-1;
-              saveData(); renderMain();
-            }
-          };
-          currentList.appendChild(li);
-        });
-      }
-      renderRecents();
-    }
-    function renderRecents(){
-      recentList.innerHTML='';
-      recents.forEach(({id,title})=>{
-        const li=document.createElement('li');
-        li.textContent=title; li.title=title;
-        li.onclick = () => playVideo(id,title);
-        recentList.appendChild(li);
-      });
-    }
+    /* ========== Helpers ========== */
+    async function fetchTitle(id){ try{const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`); const d=await r.json(); return d.title||id;}catch{return id;} }
+    function addToHistory(id,title){ history=history.filter(h=>h.id!==id); history.unshift({id,title}); if(history.length>200) history.pop(); renderHistory(); saveData(); }
+    function addToRecents(id,title){ recents=recents.filter(r=>r.id!==id); recents.unshift({id,title}); if(recents.length>30) recents.pop(); renderRecents(); }
     function removeHistory(id){ history=history.filter(h=>h.id!==id); renderHistory(); saveData(); }
-    function renderHistory(){
-      histList.innerHTML='';
-      history.forEach(({id,title})=>{
-        const li=document.createElement('li');
-        li.textContent=title; li.title=title;
-        li.onclick = () => playVideo(id,title);
-        let last=0;
-        li.ontouchend = () => { const now=Date.now(); if(now-last<300) removeHistory(id); last=now; };
-        li.ondblclick = () => removeHistory(id);
-        histList.appendChild(li);
-      });
-    }
-    function renderAll(){
-      renderSidebar(); renderMain(); renderHistory();
-      chkAuto.checked = autoplay;
-      chkShuffle.checked = shuffle;
-      saveData();
-    }
+    function nextTrack(){ if(!currentPlaylist||!currentPlaylist.songs.length) return; shuffle? currentIndex=Math.floor(Math.random()*currentPlaylist.songs.length): currentIndex=(currentIndex+1)%currentPlaylist.songs.length; const n=currentPlaylist.songs[currentIndex]; playVideo(n.id,n.title); renderMain(); }
+    function prevTrack(){ if(!currentPlaylist||!currentPlaylist.songs.length){ player.seekTo(0); return;} if(shuffle){ nextTrack(); return;} currentIndex=currentIndex<=0? currentPlaylist.songs.length-1: currentIndex-1; const p=currentPlaylist.songs[currentIndex]; playVideo(p.id,p.title); renderMain(); }
 
-    /* ---------- UI events ---------- */
-    sidebarToggle.onclick = () => { sidebar.classList.add('collapsed'); sidebarOpener.style.display='block'; };
-    sidebarOpener.onclick= () => { sidebar.classList.remove('collapsed'); sidebarOpener.style.display='none'; };
+    /* ========== Event wiring ========== */
+    sidebarToggle.addEventListener('click',()=>{ sidebar.classList.add('collapsed'); sidebarOpener.style.display='block'; });
+    sidebarOpener.addEventListener('click',()=>{ sidebar.classList.remove('collapsed'); sidebarOpener.style.display='none'; });
 
-    newPlBtn.onclick = () => {
-      const name = newPlName.value.trim();
-      if(!name) return;
-      if(playlists.some(p=>p.name.toLowerCase()===name.toLowerCase())){ alert('Playlist exists'); return; }
-      playlists.push({name,songs:[]});
-      newPlName.value=''; saveData(); renderSidebar();
-    };
+    newPlBtn.addEventListener('click',()=>{ const n=newPlName.value.trim(); if(!n) return; if(playlists.some(p=>p.name.toLowerCase()===n.toLowerCase())){alert('Exists'); return;} playlists.push({name:n,songs:[]}); newPlName.value=''; saveData(); renderSidebar(); });
 
-    ytCodeInput.onkeypress = e => {
-      if(e.key==='Enter'){
-        const code= cleanId(ytCodeInput.value.trim());
-        if(!code) return;
-        fetchTitle(code).then(title=> playVideo(code,title));
-        ytCodeInput.value='';
-      }
-    };
+    ytCodeInput.addEventListener('keypress',e=>{ if(e.key==='Enter'){ const code=ytCodeInput.value.trim(); if(!code) return; fetchTitle(code).then(t=>playVideo(code,t)); ytCodeInput.value=''; }});
 
-    playPauseBtn.onclick = () => {
-      const st=player.getPlayerState();
-      st===YT.PlayerState.PLAYING ? player.pauseVideo() : player.playVideo();
-      updatePlayPauseIcon();
-    };
-    nextBtn.onclick=playNext; prevBtn.onclick=playPrev;
-    rewBtn.onclick = () => player.seekTo(Math.max(0,player.getCurrentTime()-10),true);
-    fwdBtn.onclick = () => player.seekTo(Math.min(player.getDuration()-1,player.getCurrentTime()+10),true);
+    playPauseBtn.addEventListener('click',()=>{ const st=player.getPlayerState(); if(st===YT.PlayerState.PLAYING){ player.pauseVideo(); } else { player.playVideo(); } updatePlayPauseIcon(); });
+    nextBtn.addEventListener('click',nextTrack); prevBtn.addEventListener('click',prevTrack);
+    rewBtn.addEventListener('click',()=>{ const t=player.getCurrentTime(); player.seekTo(Math.max(0,t-10),true); });
+    fwdBtn.addEventListener('click',()=>{ const d=player.getDuration(); const t=player.getCurrentTime(); player.seekTo(Math.min(d-1,t+10),true); });
 
-    addCurrentBtn.onclick = () => {
-      if(!currentPlaylist){ alert('Select playlist first'); return; }
-      const id=player.getVideoData().video_id;
-      if(!id){ alert('Nothing playing'); return; }
-      fetchTitle(id).then(title=>{
-        currentPlaylist.songs.push({id,title});
-        saveData(); renderMain();
-      });
-    };
+    addCurrentBtn.addEventListener('click',()=>{ if(!currentPlaylist){alert('Select playlist'); return;} const id=player.getVideoData().video_id; if(!id){alert('Nothing playing'); return;} const title=player.getVideoData().title; currentPlaylist.songs.push({id,title}); saveData(); renderMain(); });
 
-    gearBtn.onclick   = () => gearPop.style.display = gearPop.style.display==='flex' ? 'none' : 'flex';
-    chkAuto.onchange  = () => { autoplay = chkAuto.checked; saveData(); };
-    chkShuffle.onchange = () => { shuffle = chkShuffle.checked; saveData(); };
-    histHandle.onclick = () => histDrawer.classList.toggle('open');
+    gearBtn.addEventListener('click',()=>{ gearPop.style.display=gearPop.style.display==='flex'?'none':'flex'; });
+    chkAuto.addEventListener('change',()=>{autoplay=chkAuto.checked; saveData();});
+    chkShuffle.addEventListener('change',()=>{shuffle=chkShuffle.checked; saveData();});
 
-    /* ---------- boot ---------- */
+    histHandle.addEventListener('click',()=>histDrawer.classList.toggle('open'));
+
+    /* ========== boot ========== */
     loadData(); renderAll();
   </script>
 </body>
