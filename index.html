@@ -168,6 +168,21 @@
       #progress{flex:1 1 100%;}
       #queue li button{padding:.3rem .75rem;}
     }
+    /* ---------- video container ---------- */
+#videoWrap{
+  position:relative;
+  width:100%;                 /* full width of the page */
+  padding-top:56.25%;         /* 16 : 9 aspect-ratio hack */
+  margin-top:1rem;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:#000;
+}
+#videoWrap #player{
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+}
   </style>
 </head>
 <body>
@@ -201,11 +216,10 @@
     <label>Import <input type="file" id="importFile" accept=".json"></label>
   </div>
 
-  <div style="position:relative;width:1px;height:1px;overflow:hidden">
+ <div id="videoWrap">
   <div id="player"
-       style="width:400px;height:225px"          <!-- actual 16 : 9 frame -->
-       allow="autoplay; picture-in-picture">
-  </div>
+       allow="autoplay; picture-in-picture"></div>
+</div>
 </div>
 
 <!-- =========  JS START  ========= -->
