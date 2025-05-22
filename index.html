@@ -271,6 +271,11 @@ input:-webkit-autofill:focus {
   text-overflow:ellipsis;
 }
 
+#nowTitle small{
+  font-size:.9em;        /* a bit smaller */
+  opacity:.7;            /* lighter grey */
+}
+
 </style>
 </head>
 <body>
@@ -390,7 +395,7 @@ const updateNow = it => {
     nowBox.style.display = 'none';
     return;
   }
-  nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
+  nowT.innerHTML = it.title + (it.artist ? ` <small>— ${it.artist}</small>` : '');
   nowBox.style.display = 'flex';        // <— use flex, not block
 };
 /* ---------- playback ---------- */
