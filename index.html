@@ -379,9 +379,8 @@ const updateNow = it => {
     nowBox.style.display = 'none';
     return;
   }
-  // show “Title — Artist” if artist exists
   nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
-  nowBox.style.display = 'block';
+  nowBox.style.display = 'flex';        // <— use flex, not block
 };
 /* ---------- playback ---------- */
 function playIdx(i){
