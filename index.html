@@ -202,17 +202,22 @@
 
   <div id="player"></div>
 
-
-<!-- YouTube IFrame API -->
-<script src="https://www.youtube.com/iframe_api"></script>
-
+<!-- =========================  JavaScript  ========================= -->
 <script>
-/* =========================================================
-   Queue persistence (cookie)
-   ========================================================= */
+/* -------------------------------------------------
+   Global state
+------------------------------------------------- */
 let queue = [], currentIdx = -1;
-const queueEl = document.getElementById('queue');
+let player, playerReady = false, pendingPlayIdx = null;  // ← new readiness flags
 
+const queueEl   = document.getElementById('queue');
+const nowBox    = document.getElementById('nowPlaying');
+const nowT      = document.getElementById('nowTitle');
+const playBtn   = document.getElementById('playPause');
+
+/* -------------------------------------------------
+   Cookie helpers  (queue)
+------------------------------------------------- */
 const loadQueue = () => {
   const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
   queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
@@ -222,26 +227,23 @@ const saveQueue = () =>
     'queue=' + encodeURIComponent(JSON.stringify(queue)) +
     ';max-age=31536000;path=/');
 
-/* =========================================================
-   Playlists (localStorage)
-   ========================================================= */
-const LS_KEY   = 'playlists',
-      selPl    = document.getElementById('playlistSelect');
+/* -------------------------------------------------
+   Playlist helpers  (localStorage)
+------------------------------------------------- */
+const LS_KEY  = 'playlists',
+      selPl   = document.getElementById('playlistSelect');
 const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
 const setLists = o  => localStorage.setItem(LS_KEY, JSON.stringify(o));
 const refreshSel = () => {
   selPl.innerHTML = '<option value="">— Load playlist —</option>';
-  Object.keys(getLists()).sort().forEach(n =>
-    selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
+  Object.keys(getLists()).sort()
+    .forEach(n => selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
 };
 
-/* =========================================================
-   YouTube IFrame + tiny-quality enforcement
-   ========================================================= */
-let player, playerReady = false;
-let pendingPlayIdx = null;                 // queued index until IFrame is ready
-
-function onYouTubeIframeAPIReady() {
+/* -------------------------------------------------
+   YouTube IFrame API bootstrap
+------------------------------------------------- */
+function onYouTubeIframeAPIReady () {          // called automatically by API
   player = new YT.Player('player', {
     height: '0',
     width:  '0',
@@ -249,35 +251,33 @@ function onYouTubeIframeAPIReady() {
       onReady: () => {
         playerReady = true;
         setTiny();
-        if (pendingPlayIdx !== null) {
+        if (pendingPlayIdx !== null) {         // start whatever we queued
           const idx = pendingPlayIdx;
           pendingPlayIdx = null;
           playIdx(idx);
         }
       },
       onStateChange: e => {
-        if (e.data === 0) skip();          // finished
-        if (e.data === 1) setTiny();       // force 144 p whenever playing
+        if (e.data === 0) skip();              // track ended → next (loops)
+        if (e.data === 1) setTiny();           // force 144 p every time
       }
     }
   });
 }
 const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
-/* =========================================================
-   Helpers
-   ========================================================= */
+/* -------------------------------------------------
+   Misc helpers
+------------------------------------------------- */
 const fetchTitle = async id => {
   try {
     const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
     const j = await r.json();
     return j.title || id;
-  } catch {
-    return id;
-  }
+  } catch { return id; }
 };
 
-function renderQueue() {
+const renderQueue = () => {
   queueEl.innerHTML = '';
   queue.forEach((it, i) =>
     queueEl.insertAdjacentHTML('beforeend', `
@@ -287,46 +287,42 @@ function renderQueue() {
         <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
         <button data-del="${i}">✕</button>
       </li>`));
-}
-
-/* Now-Playing box */
-const nowBox = document.getElementById('nowPlaying'),
-      nowT   = document.getElementById('nowTitle');
-const updateNow = it => {
-  if (!it) { nowBox.style.display = 'none'; return; }
-  nowT.textContent      = it.title || it.id;
-  nowBox.style.display  = 'block';
 };
 
-/* =========================================================
-   Playback helpers
-   ========================================================= */
-function playIdx(i) {
-  if (!queue.length) return;
-  if (i < 0 || i >= queue.length) return;
+const updateNow = it => {
+  if (!it) { nowBox.style.display = 'none'; return; }
+  nowT.textContent     = it.title || it.id;
+  nowBox.style.display = 'block';
+};
 
-  if (!playerReady) {                     // IFrame not ready yet → queue it
+/* -------------------------------------------------
+   Core playback
+------------------------------------------------- */
+function playIdx (i) {
+  if (!queue.length || i < 0 || i >= queue.length) return;
+
+  /* API not ready yet → remember intent, show “Now Playing”, bail out */
+  if (!playerReady) {
     pendingPlayIdx = i;
-    updateNow(queue[i]);                  // still show “Now Playing”
+    updateNow(queue[i]);
     return;
   }
 
   currentIdx = i;
   player.loadVideoById(queue[i].id);
   setTiny();
-  document.getElementById('playPause').textContent = 'Pause';
+  playBtn.textContent = 'Pause';
   updateNow(queue[i]);
 }
 
-/* Wrap-around skip (loops) */
 const skip = () => {
   if (!queue.length) return;
-  playIdx((currentIdx + 1) % queue.length);
+  playIdx((currentIdx + 1) % queue.length);     // wrap-around loop
 };
 
-/* =========================================================
+/* -------------------------------------------------
    UI wiring
-   ========================================================= */
+------------------------------------------------- */
 document.getElementById('addBtn').addEventListener('click', async () => {
   const id = document.getElementById('videoId').value.trim();
   if (!id) return;
@@ -336,12 +332,12 @@ document.getElementById('addBtn').addEventListener('click', async () => {
   document.getElementById('videoId').value = '';
 });
 
-document.getElementById('playPause').addEventListener('click', function () {
-  if (!playerReady) return;
+playBtn.addEventListener('click', function () {
+  if (!playerReady) return;                     // ignore until API ready
   if (player.getPlayerState() === 1) {
-    player.pauseVideo();  this.textContent = 'Play';
+    player.pauseVideo(); this.textContent = 'Play';
   } else {
-    player.playVideo();   this.textContent = 'Pause';
+    player.playVideo();  this.textContent = 'Pause';
   }
 });
 
@@ -354,6 +350,7 @@ setInterval(() => {
   if (d) document.getElementById('progress').value =
            (player.getCurrentTime() / d) * 100;
 }, 1000);
+
 document.getElementById('progress').addEventListener('input', function () {
   if (playerReady && player.getDuration)
     player.seekTo((player.getDuration() * this.value) / 100, true);
@@ -378,7 +375,7 @@ queueEl.addEventListener('click', e => {
   renderQueue(); saveQueue();
 });
 
-/* ---------- playlist save / load / delete ---------- */
+/* ---------- Playlists ---------- */
 document.getElementById('savePlaylist').addEventListener('click', () => {
   const n = document.getElementById('playlistName').value.trim();
   if (!n || !queue.length) return;
@@ -390,7 +387,7 @@ selPl.addEventListener('change', function () {
   const n = this.value;
   if (!n) return;
   queue = [...getLists()[n]];
-  renderQueue(); saveQueue(); playIdx(0);      // auto-play first track
+  renderQueue(); saveQueue(); playIdx(0);       // auto-play first track
 });
 
 document.getElementById('deletePlaylist').addEventListener('click', () => {
@@ -399,18 +396,15 @@ document.getElementById('deletePlaylist').addEventListener('click', () => {
   refreshSel(); selPl.value = '';
 });
 
-/* ---------- export / import ---------- */
+/* ---------- Export / Import ---------- */
 document.getElementById('exportPlaylist').addEventListener('click', () => {
   const chosen = selPl.value;
   let data, name;
-
-  if (chosen) {
-    data = getLists()[chosen]; name = chosen;
-  } else {
+  if (chosen) { data = getLists()[chosen]; name = chosen; }
+  else {
     if (!queue.length) { alert('Nothing to export'); return; }
     data = queue; name = 'CurrentQueue';
   }
-
   const blob = new Blob([JSON.stringify({ name, data })],
                         { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -428,24 +422,23 @@ document.getElementById('importFile').addEventListener('change', function () {
       if (!o.name || !Array.isArray(o.data)) throw 'bad';
       const l = getLists(); l[o.name] = o.data; setLists(l);
       refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
-    } catch {
-      alert('Invalid playlist file');
-    }
+    } catch { alert('Invalid playlist file'); }
   };
   r.readAsText(f); this.value = '';
 });
 
-/* =========================================================
-   Init
-   ========================================================= */
+/* -------------------------------------------------
+   Initialisation
+------------------------------------------------- */
 loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
-
-if (queue.length) playIdx(0);     // queues first-song playback; runs when IFrame ready
+if (queue.length) playIdx(0);                   // queue first track; plays after API ready
 </script>
 
+<!-- Load the YouTube IFrame API *after* the code above so the callback exists -->
+<script src="https://www.youtube.com/iframe_api"></script>
 
 </body>
 </html>
