@@ -431,6 +431,7 @@ loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
+if (queue.length) playIdx(0);   // auto-load & play first song on page load
 </script>
 
 </body>
