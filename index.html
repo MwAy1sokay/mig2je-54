@@ -203,137 +203,235 @@
   <div id="player"></div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script>
-  /* ---------- queue persistence ---------- */
-  let queue=[],currentIdx=-1;
-  const queueEl=document.getElementById('queue');
-  const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
-                       queue=m?JSON.parse(decodeURIComponent(m[1])):[];}
-  const saveQueue=()=>document.cookie="queue="+encodeURIComponent(JSON.stringify(queue))+
-                                   ";max-age=31536000;path=/";
+<script>
+/* ---------- queue persistence ---------- */
+let queue = [], currentIdx = -1;
+const queueEl = document.getElementById('queue');
 
-  /* ---------- playlists ---------- */
-  const LS_KEY='playlists',selPl=document.getElementById('playlistSelect');
-  const getLists=()=>JSON.parse(localStorage.getItem(LS_KEY)||'{}');
-  const setLists=o=>localStorage.setItem(LS_KEY,JSON.stringify(o));
-  const refreshSel=()=>{selPl.innerHTML='<option value=\"\">— Load playlist —</option>';
-    for(const n of Object.keys(getLists()).sort())
-      selPl.insertAdjacentHTML('beforeend',`<option>${n}</option>`);};
+const loadQueue = () => {
+  const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
+  queue   = m ? JSON.parse(decodeURIComponent(m[1])) : [];
+};
+const saveQueue = () =>
+  (document.cookie =
+    'queue=' + encodeURIComponent(JSON.stringify(queue)) + ';max-age=31536000;path=/');
 
-  /* ---------- YouTube ---------- */
-  let player;
-  function onYouTubeIframeAPIReady(){
-    player=new YT.Player('player',{height:'0',width:'0',
-      events:{onReady:setTiny,onStateChange:e=>{if(e.data===0)skip();if(e.data===1)setTiny();}}});
+/* ---------- playlists ---------- */
+const LS_KEY = 'playlists',
+  selPl = document.getElementById('playlistSelect');
+const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+const setLists = o => localStorage.setItem(LS_KEY, JSON.stringify(o));
+const refreshSel = () => {
+  selPl.innerHTML = '<option value="">— Load playlist —</option>';
+  for (const n of Object.keys(getLists()).sort()) {
+    selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`);
   }
-  const setTiny=()=>{try{player.setPlaybackQuality('tiny');}catch{}};
+};
 
-  /* title helper */
-  const fetchTitle=async id=>{
-    try{const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
-        const j=await r.json();return j.title||id;}catch{return id;}};
+/* ---------- YouTube ---------- */
+let player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    height: '0',
+    width: '0',
+    events: {
+      onReady: setTiny,
+      onStateChange: e => {
+        if (e.data === 0) skip();         // song ended
+        if (e.data === 1) setTiny();      // force 144 p when (re)starting
+      }
+    }
+  });
+}
+const setTiny = () => {
+  try {
+    player.setPlaybackQuality('tiny');
+  } catch {}
+};
 
-  /* render queue */
-  function renderQueue(){
-    queueEl.innerHTML='';
-    queue.forEach((it,i)=>queueEl.insertAdjacentHTML('beforeend',`
-      <li>
-        <span class="title">${it.title||it.id}</span>
-        <button ${i?'':'disabled'} data-up="${i}">↑</button>
-        <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
-        <button data-del="${i}">✕</button>
-      </li>`));
+/* ---------- utilities ---------- */
+const fetchTitle = async id => {
+  try {
+    const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+    const j = await r.json();
+    return j.title || id;
+  } catch {
+    return id;
   }
+};
 
-  /* now-playing */
-  const nowBox=document.getElementById('nowPlaying'),nowT=document.getElementById('nowTitle');
-  const updateNow=it=>{if(!it){nowBox.style.display='none';return;}
-                       nowT.textContent=it.title||it.id;nowBox.style.display='block';};
+function renderQueue() {
+  queueEl.innerHTML = '';
+  queue.forEach((it, i) =>
+    queueEl.insertAdjacentHTML(
+      'beforeend',
+      `<li>
+         <span class="title">${it.title || it.id}</span>
+         <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
+         <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
+         <button data-del="${i}">✕</button>
+       </li>`
+    )
+  );
+}
 
-  /* playback */
-  function playIdx(i){
-    if(i<0||i>=queue.length)return;
-    currentIdx=i;
-    player.loadVideoById(queue[i].id); setTiny();
-    document.getElementById('playPause').textContent='Pause';
-    updateNow(queue[i]);
+/* ---------- Now-playing ---------- */
+const nowBox = document.getElementById('nowPlaying'),
+  nowT = document.getElementById('nowTitle');
+const updateNow = it => {
+  if (!it) {
+    nowBox.style.display = 'none';
+    return;
   }
-  const skip=()=>playIdx(currentIdx+1);
+  nowT.textContent = it.title || it.id;
+  nowBox.style.display = 'block';
+};
 
-  /* -------- event wiring -------- */
-  document.getElementById('addBtn').addEventListener('click',async()=>{
-    const id=document.getElementById('videoId').value.trim(); if(!id)return;
-    const title=await fetchTitle(id);
-    queue.unshift({id,title}); saveQueue(); renderQueue(); playIdx(0);
-    document.getElementById('videoId').value='';
-  });
+/* ---------- playback helpers ---------- */
+function playIdx(i) {
+  if (!queue.length) return;                    // nothing queued
+  if (i < 0 || i >= queue.length) return;       // guard
+  currentIdx = i;
+  player.loadVideoById(queue[i].id);
+  setTiny();
+  document.getElementById('playPause').textContent = 'Pause';
+  updateNow(queue[i]);
+}
 
-  document.getElementById('playPause').addEventListener('click',function(){
-    if(player.getPlayerState()===1){player.pauseVideo();this.textContent='Play';}
-    else                          {player.playVideo(); this.textContent='Pause';}
-  });
-  document.getElementById('skip').addEventListener('click',skip);
+/* --- wrapped skip — loops to start --- */
+const skip = () => {
+  if (!queue.length) return;
+  const next = (currentIdx + 1) % queue.length; // wrap-around
+  playIdx(next);
+};
 
-  setInterval(()=>{if(!player||!player.getDuration)return;
-                   const d=player.getDuration();
-                   if(d)document.getElementById('progress').value=
-                         player.getCurrentTime()/d*100;},1000);
-  document.getElementById('progress').addEventListener('input',function(){
-    if(player&&player.getDuration)player.seekTo(player.getDuration()*this.value/100,true);
-  });
+/* ---------- UI wiring ---------- */
+document.getElementById('addBtn').addEventListener('click', async () => {
+  const id = document.getElementById('videoId').value.trim();
+  if (!id) return;
+  const title = await fetchTitle(id);
+  queue.unshift({ id, title });
+  saveQueue();
+  renderQueue();
+  playIdx(0);                                   // new track auto-plays
+  document.getElementById('videoId').value = '';
+});
 
-  queueEl.addEventListener('click',e=>{
-    const {up,down,del}=e.target.dataset;
-    if(up){[queue[up-1],queue[up]]=[queue[up],queue[up-1]];}
-    else if(down){[queue[+down],queue[+down+1]]=[queue[+down+1],queue[+down]];}
-    else if(del){queue.splice(del,1);if(currentIdx>=del)currentIdx--;}
-    else if(e.target.classList.contains('title')){
-      playIdx([...queueEl.children].indexOf(e.target.parentElement));return;}
-    else return;
-    renderQueue(); saveQueue();
-  });
+document.getElementById('playPause').addEventListener('click', function () {
+  if (player.getPlayerState() === 1) {
+    player.pauseVideo();
+    this.textContent = 'Play';
+  } else {
+    player.playVideo();
+    this.textContent = 'Pause';
+  }
+});
+document.getElementById('skip').addEventListener('click', skip);
 
-  /* playlists */
-  document.getElementById('savePlaylist').addEventListener('click',()=>{
-    const n=document.getElementById('playlistName').value.trim();
-    if(!n||!queue.length)return;
-    const l=getLists(); l[n]=queue; setLists(l);
-    refreshSel(); alert('Playlist saved!');
-  });
-  selPl.addEventListener('change',function(){
-    if(!this.value)return;
-    queue=[...getLists()[this.value]]; renderQueue(); saveQueue(); playIdx(0);
-  });
-  document.getElementById('deletePlaylist').addEventListener('click',()=>{
-    if(!selPl.value)return;
-    const l=getLists(); delete l[selPl.value]; setLists(l);
-    refreshSel(); selPl.value='';
-  });
-
-  /* export / import */
-  document.getElementById('exportPlaylist').addEventListener('click',()=>{
-    const chosen=selPl.value; let data,name;
-    if(chosen){data=getLists()[chosen]; name=chosen;}
-    else{if(!queue.length){alert('Nothing to export');return;}
-         data=queue; name='CurrentQueue';}
-    const blob=new Blob([JSON.stringify({name,data})],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    Object.assign(document.createElement('a'),{href:url,download:name+'.json'}).click();
-    URL.revokeObjectURL(url);
-  });
-  document.getElementById('importFile').addEventListener('change',function(){
-    const f=this.files[0]; if(!f)return;
-    const r=new FileReader();
-    r.onload=e=>{try{const o=JSON.parse(e.target.result);
-      if(!o.name||!Array.isArray(o.data))throw'bad';
-      const l=getLists(); l[o.name]=o.data; setLists(l);
-      refreshSel(); alert('Imported “‘'+o.name+'” playlist!');}
-      catch{alert('Invalid playlist file');}};
-    r.readAsText(f); this.value='';
+setInterval(() => {
+  if (!player || !player.getDuration) return;
+  const d = player.getDuration();
+  if (d)
+    document.getElementById('progress').value = (player.getCurrentTime() / d) * 100;
+}, 1000);
+document
+  .getElementById('progress')
+  .addEventListener('input', function () {
+    if (player && player.getDuration)
+      player.seekTo((player.getDuration() * this.value) / 100, true);
   });
 
-  /* init */
-  loadQueue(); renderQueue(); refreshSel(); updateNow(queue[currentIdx]);
-  </script>
+queueEl.addEventListener('click', e => {
+  const { up, down, del } = e.target.dataset;
+  if (up) {
+    [queue[up - 1], queue[up]] = [queue[up], queue[up - 1]];
+  } else if (down) {
+    [queue[+down], queue[+down + 1]] = [queue[+down + 1], queue[+down]];
+  } else if (del) {
+    queue.splice(del, 1);
+    if (currentIdx >= del) currentIdx--;
+  } else if (e.target.classList.contains('title')) {
+    playIdx([...queueEl.children].indexOf(e.target.parentElement));
+    return;
+  } else return;
+  renderQueue();
+  saveQueue();
+});
+
+/* playlists save / load / delete */
+document.getElementById('savePlaylist').addEventListener('click', () => {
+  const n = document.getElementById('playlistName').value.trim();
+  if (!n || !queue.length) return;
+  const l = getLists();
+  l[n] = queue;
+  setLists(l);
+  refreshSel();
+  alert('Playlist saved!');
+});
+selPl.addEventListener('change', function () {
+  const n = this.value;
+  if (!n) return;
+  queue = [...getLists()[n]];
+  renderQueue();
+  saveQueue();
+  playIdx(0);                                  // ① first track auto-plays & shows
+});
+document.getElementById('deletePlaylist').addEventListener('click', () => {
+  if (!selPl.value) return;
+  const l = getLists();
+  delete l[selPl.value];
+  setLists(l);
+  refreshSel();
+  selPl.value = '';
+});
+
+/* export / import (unchanged) */
+document.getElementById('exportPlaylist').addEventListener('click', () => {
+  const chosen = selPl.value;
+  let data, name;
+  if (chosen) {
+    data = getLists()[chosen];
+    name = chosen;
+  } else {
+    if (!queue.length) {
+      alert('Nothing to export');
+      return;
+    }
+    data = queue;
+    name = 'CurrentQueue';
+  }
+  const blob = new Blob([JSON.stringify({ name, data })], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'), { href: url, download: name + '.json' }).click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importFile').addEventListener('change', function () {
+  const f = this.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const o = JSON.parse(e.target.result);
+      if (!o.name || !Array.isArray(o.data)) throw 'bad';
+      const l = getLists();
+      l[o.name] = o.data;
+      setLists(l);
+      refreshSel();
+      alert('Imported “‘' + o.name + '” playlist!');
+    } catch {
+      alert('Invalid playlist file');
+    }
+  };
+  r.readAsText(f);
+  this.value = '';
+});
+
+/* ---------- init ---------- */
+loadQueue();
+renderQueue();
+refreshSel();
+updateNow(queue[currentIdx]);
+</script>
+
 </body>
 </html>
