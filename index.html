@@ -324,8 +324,19 @@ function onYouTubeIframeAPIReady(){
 const setTiny=()=>{try{player.setPlaybackQuality('tiny');}catch{}};
 
 /* ---------- helpers ---------- */
-const fetchTitle=async id=>{try{const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
-                               const j=await r.json();return j.title||id;}catch{return id;}};
+/* fetch {title, artist} via noembed */
+const fetchVideoInfo = async id => {
+  try {
+    const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+    const j = await r.json();
+    const rawArtist = j.author_name || '';               // e.g. "Imagine Dragons – Topic"
+    const artist = rawArtist.replace(/\s*[–-]\s*Topic\s*$/i, ''); // strip dash+Topic
+    return { title: j.title || id, artist };
+  } catch {
+    return { title: id, artist: '' };
+  }
+};
+
 const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
   <li>
     <span class="title">${it.title||it.id}</span>
