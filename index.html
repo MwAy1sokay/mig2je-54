@@ -346,10 +346,16 @@ const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacent
     <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
     <button data-del="${i}">✕</button>
   </li>`));};
-const updateNow=it=>{if(!it){nowBox.style.display='none';return;}
-                     nowT.textContent=it.title||it.id;nowBox.style.display='block';};
-                     nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
-
+/* ---------- helpers ---------- */
+const updateNow = it => {
+  if (!it) {
+    nowBox.style.display = 'none';
+    return;
+  }
+  // show “Title — Artist” if artist exists
+  nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
+  nowBox.style.display = 'block';
+};
 /* ---------- playback ---------- */
 function playIdx(i){
   if(!queue.length||i<0||i>=queue.length)return;
