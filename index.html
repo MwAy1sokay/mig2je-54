@@ -348,6 +348,7 @@ const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacent
   </li>`));};
 const updateNow=it=>{if(!it){nowBox.style.display='none';return;}
                      nowT.textContent=it.title||it.id;nowBox.style.display='block';};
+                     nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
 
 /* ---------- playback ---------- */
 function playIdx(i){
