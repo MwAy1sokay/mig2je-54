@@ -203,11 +203,16 @@
   <div id="player"></div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* ---------- queue persistence ---------- */
+/* ---------- globals ---------- */
 let queue = [], currentIdx = -1;
+let player, playerReady = false;
+let pendingPlayIdx = null;            // which track to start once IFrame is ready
+
 const queueEl = document.getElementById('queue');
 
+/* ---------- cookie helpers ---------- */
 const loadQueue = () => {
   const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
   queue   = m ? JSON.parse(decodeURIComponent(m[1])) : [];
@@ -216,9 +221,9 @@ const saveQueue = () =>
   (document.cookie =
     'queue=' + encodeURIComponent(JSON.stringify(queue)) + ';max-age=31536000;path=/');
 
-/* ---------- playlists ---------- */
+/* ---------- playlist helpers (localStorage) ---------- */
 const LS_KEY = 'playlists',
-  selPl = document.getElementById('playlistSelect');
+      selPl  = document.getElementById('playlistSelect');
 const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
 const setLists = o => localStorage.setItem(LS_KEY, JSON.stringify(o));
 const refreshSel = () => {
@@ -228,69 +233,70 @@ const refreshSel = () => {
   }
 };
 
-/* ---------- YouTube ---------- */
-let player;
-function onYouTubeIframeAPIReady() {
+/* ---------- YouTube IFrame ---------- */
+function onYouTubeIframeAPIReady () {
   player = new YT.Player('player', {
-    height: '0',
-    width: '0',
+    height: '0', width: '0',
     events: {
-      onReady: setTiny,
+      onReady: () => {
+        playerReady = true;
+        setTiny();
+        if (pendingPlayIdx !== null) {
+          const idx = pendingPlayIdx;
+          pendingPlayIdx = null;
+          playIdx(idx);
+        }
+      },
       onStateChange: e => {
-        if (e.data === 0) skip();         // song ended
-        if (e.data === 1) setTiny();      // force 144 p when (re)starting
+        if (e.data === 0) skip();   // track finished
+        if (e.data === 1) setTiny();
       }
     }
   });
 }
-const setTiny = () => {
-  try {
-    player.setPlaybackQuality('tiny');
-  } catch {}
-};
+const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
-/* ---------- utilities ---------- */
+/* ---------- fetch video title ---------- */
 const fetchTitle = async id => {
   try {
     const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
     const j = await r.json();
     return j.title || id;
-  } catch {
-    return id;
-  }
+  } catch { return id; }
 };
 
-function renderQueue() {
+/* ---------- render queue ---------- */
+function renderQueue () {
   queueEl.innerHTML = '';
-  queue.forEach((it, i) =>
-    queueEl.insertAdjacentHTML(
-      'beforeend',
-      `<li>
-         <span class="title">${it.title || it.id}</span>
-         <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
-         <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
-         <button data-del="${i}">✕</button>
-       </li>`
-    )
-  );
+  queue.forEach((it, i) => queueEl.insertAdjacentHTML('beforeend', `
+    <li>
+      <span class="title">${it.title || it.id}</span>
+      <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
+      <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
+      <button data-del="${i}">✕</button>
+    </li>`));
 }
 
-/* ---------- Now-playing ---------- */
+/* ---------- Now-Playing panel ---------- */
 const nowBox = document.getElementById('nowPlaying'),
-  nowT = document.getElementById('nowTitle');
+      nowT   = document.getElementById('nowTitle');
 const updateNow = it => {
-  if (!it) {
-    nowBox.style.display = 'none';
-    return;
-  }
+  if (!it) { nowBox.style.display = 'none'; return; }
   nowT.textContent = it.title || it.id;
   nowBox.style.display = 'block';
 };
 
 /* ---------- playback helpers ---------- */
-function playIdx(i) {
-  if (!queue.length) return;                    // nothing queued
-  if (i < 0 || i >= queue.length) return;       // guard
+function playIdx (i) {
+  if (!queue.length || i < 0 || i >= queue.length) return;
+
+  /* if IFrame not ready yet, remember what to play and bail */
+  if (!playerReady) {
+    pendingPlayIdx = i;
+    updateNow(queue[i]);            // still show the title
+    return;
+  }
+
   currentIdx = i;
   player.loadVideoById(queue[i].id);
   setTiny();
@@ -298,14 +304,13 @@ function playIdx(i) {
   updateNow(queue[i]);
 }
 
-/* --- wrapped skip — loops to start --- */
+/* wrap-around skip */
 const skip = () => {
   if (!queue.length) return;
-  const next = (currentIdx + 1) % queue.length; // wrap-around
-  playIdx(next);
+  playIdx((currentIdx + 1) % queue.length);
 };
 
-/* ---------- UI wiring ---------- */
+/* ---------- button & slider events ---------- */
 document.getElementById('addBtn').addEventListener('click', async () => {
   const id = document.getElementById('videoId').value.trim();
   if (!id) return;
@@ -313,34 +318,32 @@ document.getElementById('addBtn').addEventListener('click', async () => {
   queue.unshift({ id, title });
   saveQueue();
   renderQueue();
-  playIdx(0);                                   // new track auto-plays
+  playIdx(0);                        // new song auto-plays (or queues if not ready yet)
   document.getElementById('videoId').value = '';
 });
 
 document.getElementById('playPause').addEventListener('click', function () {
+  if (!playerReady) return;
   if (player.getPlayerState() === 1) {
-    player.pauseVideo();
-    this.textContent = 'Play';
+    player.pauseVideo(); this.textContent = 'Play';
   } else {
-    player.playVideo();
-    this.textContent = 'Pause';
+    player.playVideo(); this.textContent = 'Pause';
   }
 });
 document.getElementById('skip').addEventListener('click', skip);
 
 setInterval(() => {
-  if (!player || !player.getDuration) return;
+  if (!playerReady || !player.getDuration) return;
   const d = player.getDuration();
-  if (d)
-    document.getElementById('progress').value = (player.getCurrentTime() / d) * 100;
+  if (d) document.getElementById('progress').value =
+           (player.getCurrentTime() / d) * 100;
 }, 1000);
-document
-  .getElementById('progress')
-  .addEventListener('input', function () {
-    if (player && player.getDuration)
-      player.seekTo((player.getDuration() * this.value) / 100, true);
-  });
+document.getElementById('progress').addEventListener('input', function () {
+  if (playerReady && player.getDuration)
+    player.seekTo((player.getDuration() * this.value) / 100, true);
+});
 
+/* queue controls (up / down / delete / click-to-play) */
 queueEl.addEventListener('click', e => {
   const { up, down, del } = e.target.dataset;
   if (up) {
@@ -354,76 +357,53 @@ queueEl.addEventListener('click', e => {
     playIdx([...queueEl.children].indexOf(e.target.parentElement));
     return;
   } else return;
-  renderQueue();
-  saveQueue();
+  renderQueue(); saveQueue();
 });
 
-/* playlists save / load / delete */
+/* playlist save / load / delete */
 document.getElementById('savePlaylist').addEventListener('click', () => {
   const n = document.getElementById('playlistName').value.trim();
   if (!n || !queue.length) return;
-  const l = getLists();
-  l[n] = queue;
-  setLists(l);
-  refreshSel();
-  alert('Playlist saved!');
+  const l = getLists(); l[n] = queue; setLists(l);
+  refreshSel(); alert('Playlist saved!');
 });
 selPl.addEventListener('change', function () {
-  const n = this.value;
-  if (!n) return;
-  queue = [...getLists()[n]];
-  renderQueue();
-  saveQueue();
-  playIdx(0);                                  // ① first track auto-plays & shows
+  if (!this.value) return;
+  queue = [...getLists()[this.value]];
+  renderQueue(); saveQueue(); playIdx(0);
 });
 document.getElementById('deletePlaylist').addEventListener('click', () => {
   if (!selPl.value) return;
-  const l = getLists();
-  delete l[selPl.value];
-  setLists(l);
-  refreshSel();
-  selPl.value = '';
+  const l = getLists(); delete l[selPl.value]; setLists(l);
+  refreshSel(); selPl.value = '';
 });
 
-/* export / import (unchanged) */
+/* export / import unchanged */
 document.getElementById('exportPlaylist').addEventListener('click', () => {
   const chosen = selPl.value;
   let data, name;
-  if (chosen) {
-    data = getLists()[chosen];
-    name = chosen;
-  } else {
-    if (!queue.length) {
-      alert('Nothing to export');
-      return;
-    }
-    data = queue;
-    name = 'CurrentQueue';
+  if (chosen) { data = getLists()[chosen]; name = chosen; }
+  else {
+    if (!queue.length) { alert('Nothing to export'); return; }
+    data = queue; name = 'CurrentQueue';
   }
   const blob = new Blob([JSON.stringify({ name, data })], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const url  = URL.createObjectURL(blob);
   Object.assign(document.createElement('a'), { href: url, download: name + '.json' }).click();
   URL.revokeObjectURL(url);
 });
 document.getElementById('importFile').addEventListener('change', function () {
-  const f = this.files[0];
-  if (!f) return;
+  const f = this.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = e => {
     try {
       const o = JSON.parse(e.target.result);
       if (!o.name || !Array.isArray(o.data)) throw 'bad';
-      const l = getLists();
-      l[o.name] = o.data;
-      setLists(l);
-      refreshSel();
-      alert('Imported “‘' + o.name + '” playlist!');
-    } catch {
-      alert('Invalid playlist file');
-    }
+      const l = getLists(); l[o.name] = o.data; setLists(l);
+      refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
+    } catch { alert('Invalid playlist file'); }
   };
-  r.readAsText(f);
-  this.value = '';
+  r.readAsText(f); this.value = '';
 });
 
 /* ---------- init ---------- */
@@ -431,7 +411,7 @@ loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
-if (queue.length) playIdx(0);   // auto-load & play first song on page load
+if (queue.length) playIdx(0);        // queues first song; plays when IFrame ready
 </script>
 
 </body>
