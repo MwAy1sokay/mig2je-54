@@ -202,24 +202,24 @@
 
   <div id="player"></div>
 
-<!-- =========================  JavaScript  ========================= -->
+<!-- JS START -->
 <script>
-/* -------------------------------------------------
-   Global state
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   GLOBAL STATE
+------------------------------------------------------------------ */
 let queue = [], currentIdx = -1;
-let player, playerReady = false, pendingPlayIdx = null;  // ← new readiness flags
+let player, playerReady = false, pendingPlayIdx = null;
 
-const queueEl   = document.getElementById('queue');
-const nowBox    = document.getElementById('nowPlaying');
-const nowT      = document.getElementById('nowTitle');
-const playBtn   = document.getElementById('playPause');
+const queueEl = document.getElementById('queue');
+const nowBox  = document.getElementById('nowPlaying');
+const nowT    = document.getElementById('nowTitle');
+const playBtn = document.getElementById('playPause');
 
-/* -------------------------------------------------
-   Cookie helpers  (queue)
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   QUEUE PERSISTENCE  (cookies)
+------------------------------------------------------------------ */
 const loadQueue = () => {
-  const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
+  const m = document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
   queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
 };
 const saveQueue = () =>
@@ -227,55 +227,52 @@ const saveQueue = () =>
     'queue=' + encodeURIComponent(JSON.stringify(queue)) +
     ';max-age=31536000;path=/');
 
-/* -------------------------------------------------
-   Playlist helpers  (localStorage)
-------------------------------------------------- */
-const LS_KEY  = 'playlists',
-      selPl   = document.getElementById('playlistSelect');
+/* ------------------------------------------------------------------
+   PLAYLISTS  (localStorage)
+------------------------------------------------------------------ */
+const LS_KEY = 'playlists',
+      selPl  = document.getElementById('playlistSelect');
 const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
 const setLists = o  => localStorage.setItem(LS_KEY, JSON.stringify(o));
 const refreshSel = () => {
   selPl.innerHTML = '<option value="">— Load playlist —</option>';
   Object.keys(getLists()).sort()
-    .forEach(n => selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
+        .forEach(n => selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
 };
 
-/* -------------------------------------------------
-   YouTube IFrame API bootstrap
-------------------------------------------------- */
-function onYouTubeIframeAPIReady () {          // called automatically by API
+/* ------------------------------------------------------------------
+   YOUTUBE IFRAME API
+------------------------------------------------------------------ */
+function onYouTubeIframeAPIReady () {
   player = new YT.Player('player', {
-    height: '0',
-    width:  '0',
+    height: '0',   width: '0',
     events: {
       onReady: () => {
         playerReady = true;
         setTiny();
-        if (pendingPlayIdx !== null) {         // start whatever we queued
+        if (pendingPlayIdx !== null) {
           const idx = pendingPlayIdx;
           pendingPlayIdx = null;
           playIdx(idx);
         }
       },
       onStateChange: e => {
-  if (e.data === 0) skip();           // finished
-  if (e.data === 1) setTiny();        // keep 144 p
-
-  /* NEW — keep Play/Pause label in sync */
-  if (e.data === 1) {                 // actually playing
-    playBtn.textContent = 'Pause';
-  } else if (e.data === 2 || e.data === -1 || e.data === 5) { // paused / cued
-    playBtn.textContent = 'Play';
-  }
-}
-
+        /* 1 = playing, 2 = paused, 0 = ended, -1/5 = cued/unstarted */
+        if (e.data === 0) skip();      // finished → next (loops)
+        if (e.data === 1) setTiny();   // ensure 144 p
+        /* keep Play/Pause button in sync */
+        if (e.data === 1)            { playBtn.textContent = 'Pause'; }
+        else if (e.data === 2 || e.data === -1 || e.data === 5) {
+                                     playBtn.textContent = 'Play';  }
+      }
+    }
   });
 }
 const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
-/* -------------------------------------------------
-   Misc helpers
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   HELPERS
+------------------------------------------------------------------ */
 const fetchTitle = async id => {
   try {
     const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
@@ -286,30 +283,29 @@ const fetchTitle = async id => {
 
 const renderQueue = () => {
   queueEl.innerHTML = '';
-  queue.forEach((it, i) =>
+  queue.forEach((it,i) =>
     queueEl.insertAdjacentHTML('beforeend', `
       <li>
         <span class="title">${it.title || it.id}</span>
-        <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
-        <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
+        <button ${i?'':'disabled'} data-up="${i}">↑</button>
+        <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
         <button data-del="${i}">✕</button>
       </li>`));
 };
 
 const updateNow = it => {
   if (!it) { nowBox.style.display = 'none'; return; }
-  nowT.textContent     = it.title || it.id;
+  nowT.textContent = it.title || it.id;
   nowBox.style.display = 'block';
 };
 
-/* -------------------------------------------------
-   Core playback
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   PLAYBACK
+------------------------------------------------------------------ */
 function playIdx (i) {
   if (!queue.length || i < 0 || i >= queue.length) return;
 
-  /* API not ready yet → remember intent, show “Now Playing”, bail out */
-  if (!playerReady) {
+  if (!playerReady) {          // IFrame not ready → queue request
     pendingPlayIdx = i;
     updateNow(queue[i]);
     return;
@@ -318,18 +314,17 @@ function playIdx (i) {
   currentIdx = i;
   player.loadVideoById(queue[i].id);
   setTiny();
-  playBtn.textContent = 'Pause';
-  updateNow(queue[i]);
+  updateNow(queue[i]);         // button will flip when state === 1
 }
 
 const skip = () => {
   if (!queue.length) return;
-  playIdx((currentIdx + 1) % queue.length);     // wrap-around loop
+  playIdx((currentIdx + 1) % queue.length);   // wrap-around loop
 };
 
-/* -------------------------------------------------
-   UI wiring
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   UI EVENTS
+------------------------------------------------------------------ */
 document.getElementById('addBtn').addEventListener('click', async () => {
   const id = document.getElementById('videoId').value.trim();
   if (!id) return;
@@ -340,17 +335,17 @@ document.getElementById('addBtn').addEventListener('click', async () => {
 });
 
 playBtn.addEventListener('click', function () {
-  if (!playerReady) return;                     // ignore until API ready
-  if (player.getPlayerState() === 1) {
-    player.pauseVideo(); this.textContent = 'Play';
-  } else {
-    player.playVideo();  this.textContent = 'Pause';
+  if (!playerReady) return;
+  if (player.getPlayerState() === 1) {          // playing → pause
+    player.pauseVideo();
+  } else {                                      // paused / cued → play
+    player.playVideo();
   }
 });
 
 document.getElementById('skip').addEventListener('click', skip);
 
-/* progress bar */
+/* progress slider */
 setInterval(() => {
   if (!playerReady || !player.getDuration) return;
   const d = player.getDuration();
@@ -363,22 +358,16 @@ document.getElementById('progress').addEventListener('input', function () {
     player.seekTo((player.getDuration() * this.value) / 100, true);
 });
 
-/* queue buttons & click-to-play */
+/* queue buttons + click-to-play */
 queueEl.addEventListener('click', e => {
   const { up, down, del } = e.target.dataset;
-  if (up) {
-    [queue[up - 1], queue[up]] = [queue[up], queue[up - 1]];
-  } else if (down) {
-    [queue[+down], queue[+down + 1]] =
-      [queue[+down + 1], queue[+down]];
-  } else if (del) {
-    queue.splice(del, 1);
-    if (currentIdx >= del) currentIdx--;
-  } else if (e.target.classList.contains('title')) {
+  if (up)        [queue[up-1], queue[up]] = [queue[up], queue[up-1]];
+  else if (down) [queue[+down], queue[+down+1]] = [queue[+down+1], queue[+down]];
+  else if (del)  { queue.splice(del,1); if (currentIdx >= del) currentIdx--; }
+  else if (e.target.classList.contains('title')) {
     playIdx([...queueEl.children].indexOf(e.target.parentElement));
     return;
   } else return;
-
   renderQueue(); saveQueue();
 });
 
@@ -391,10 +380,9 @@ document.getElementById('savePlaylist').addEventListener('click', () => {
 });
 
 selPl.addEventListener('change', function () {
-  const n = this.value;
-  if (!n) return;
-  queue = [...getLists()[n]];
-  renderQueue(); saveQueue(); playIdx(0);       // auto-play first track
+  if (!this.value) return;
+  queue = [...getLists()[this.value]];
+  renderQueue(); saveQueue(); playIdx(0);
 });
 
 document.getElementById('deletePlaylist').addEventListener('click', () => {
@@ -413,10 +401,10 @@ document.getElementById('exportPlaylist').addEventListener('click', () => {
     data = queue; name = 'CurrentQueue';
   }
   const blob = new Blob([JSON.stringify({ name, data })],
-                        { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
+                        { type:'application/json' });
+  const url = URL.createObjectURL(blob);
   Object.assign(document.createElement('a'),
-    { href: url, download: name + '.json' }).click();
+    { href:url, download:name+'.json' }).click();
   URL.revokeObjectURL(url);
 });
 
@@ -428,24 +416,26 @@ document.getElementById('importFile').addEventListener('change', function () {
       const o = JSON.parse(e.target.result);
       if (!o.name || !Array.isArray(o.data)) throw 'bad';
       const l = getLists(); l[o.name] = o.data; setLists(l);
-      refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
+      refreshSel(); alert('Imported “‘'+o.name+'” playlist!');
     } catch { alert('Invalid playlist file'); }
   };
   r.readAsText(f); this.value = '';
 });
 
-/* -------------------------------------------------
-   Initialisation
-------------------------------------------------- */
+/* ------------------------------------------------------------------
+   INITIALISATION
+------------------------------------------------------------------ */
 loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
-if (queue.length) playIdx(0);                   // queue first track; plays after API ready
+if (queue.length) playIdx(0);        // autostarts after IFrame ready
 </script>
 
-<!-- Load the YouTube IFrame API *after* the code above so the callback exists -->
+<!-- load the API AFTER the script so the callback is defined -->
 <script src="https://www.youtube.com/iframe_api"></script>
+<!-- JS END -->
+
 
 </body>
 </html>
