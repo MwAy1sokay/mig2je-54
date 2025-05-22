@@ -339,7 +339,9 @@ const fetchVideoInfo = async id => {
 
 const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
   <li>
-    <span class="title">${it.title||it.id}</span>
+    <span class="title">
+  ${it.title || it.id}
+  ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}</span>
     <button ${i?'':'disabled'} data-up="${i}">↑</button>
     <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
     <button data-del="${i}">✕</button>
@@ -358,7 +360,7 @@ const skip=()=>{if(queue.length)playIdx((currentIdx+1)%queue.length);};
 /* ---------- UI ---------- */
 document.getElementById('addBtn').addEventListener('click',async()=>{
   const id=document.getElementById('videoId').value.trim();if(!id)return;
-  const title=await fetchTitle(id);queue.unshift({id,title});
+  const info = await fetchVideoInfo(id);queue.unshift({ id, title: info.title, artist: info.artist });
   saveQueue();renderQueue();playIdx(0);document.getElementById('videoId').value='';
 });
 playBtn.addEventListener('click',()=>{if(!playerReady)return;
