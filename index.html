@@ -202,41 +202,49 @@
 
   <div id="player"></div>
 
-  <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-/* ---------- globals ---------- */
-let queue = [], currentIdx = -1;
-let player, playerReady = false;
-let pendingPlayIdx = null;            // which track to start once IFrame is ready
 
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+/* =========================================================
+   Queue persistence (cookie)
+   ========================================================= */
+let queue = [], currentIdx = -1;
 const queueEl = document.getElementById('queue');
 
-/* ---------- cookie helpers ---------- */
 const loadQueue = () => {
   const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
-  queue   = m ? JSON.parse(decodeURIComponent(m[1])) : [];
+  queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
 };
 const saveQueue = () =>
   (document.cookie =
-    'queue=' + encodeURIComponent(JSON.stringify(queue)) + ';max-age=31536000;path=/');
+    'queue=' + encodeURIComponent(JSON.stringify(queue)) +
+    ';max-age=31536000;path=/');
 
-/* ---------- playlist helpers (localStorage) ---------- */
-const LS_KEY = 'playlists',
-      selPl  = document.getElementById('playlistSelect');
+/* =========================================================
+   Playlists (localStorage)
+   ========================================================= */
+const LS_KEY   = 'playlists',
+      selPl    = document.getElementById('playlistSelect');
 const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-const setLists = o => localStorage.setItem(LS_KEY, JSON.stringify(o));
+const setLists = o  => localStorage.setItem(LS_KEY, JSON.stringify(o));
 const refreshSel = () => {
   selPl.innerHTML = '<option value="">— Load playlist —</option>';
-  for (const n of Object.keys(getLists()).sort()) {
-    selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`);
-  }
+  Object.keys(getLists()).sort().forEach(n =>
+    selPl.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
 };
 
-/* ---------- YouTube IFrame ---------- */
-function onYouTubeIframeAPIReady () {
+/* =========================================================
+   YouTube IFrame + tiny-quality enforcement
+   ========================================================= */
+let player, playerReady = false;
+let pendingPlayIdx = null;                 // queued index until IFrame is ready
+
+function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
-    height: '0', width: '0',
+    height: '0',
+    width:  '0',
     events: {
       onReady: () => {
         playerReady = true;
@@ -248,52 +256,58 @@ function onYouTubeIframeAPIReady () {
         }
       },
       onStateChange: e => {
-        if (e.data === 0) skip();   // track finished
-        if (e.data === 1) setTiny();
+        if (e.data === 0) skip();          // finished
+        if (e.data === 1) setTiny();       // force 144 p whenever playing
       }
     }
   });
 }
 const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
-/* ---------- fetch video title ---------- */
+/* =========================================================
+   Helpers
+   ========================================================= */
 const fetchTitle = async id => {
   try {
     const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
     const j = await r.json();
     return j.title || id;
-  } catch { return id; }
+  } catch {
+    return id;
+  }
 };
 
-/* ---------- render queue ---------- */
-function renderQueue () {
+function renderQueue() {
   queueEl.innerHTML = '';
-  queue.forEach((it, i) => queueEl.insertAdjacentHTML('beforeend', `
-    <li>
-      <span class="title">${it.title || it.id}</span>
-      <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
-      <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
-      <button data-del="${i}">✕</button>
-    </li>`));
+  queue.forEach((it, i) =>
+    queueEl.insertAdjacentHTML('beforeend', `
+      <li>
+        <span class="title">${it.title || it.id}</span>
+        <button ${i ? '' : 'disabled'} data-up="${i}">↑</button>
+        <button ${i < queue.length - 1 ? '' : 'disabled'} data-down="${i}">↓</button>
+        <button data-del="${i}">✕</button>
+      </li>`));
 }
 
-/* ---------- Now-Playing panel ---------- */
+/* Now-Playing box */
 const nowBox = document.getElementById('nowPlaying'),
       nowT   = document.getElementById('nowTitle');
 const updateNow = it => {
   if (!it) { nowBox.style.display = 'none'; return; }
-  nowT.textContent = it.title || it.id;
-  nowBox.style.display = 'block';
+  nowT.textContent      = it.title || it.id;
+  nowBox.style.display  = 'block';
 };
 
-/* ---------- playback helpers ---------- */
-function playIdx (i) {
-  if (!queue.length || i < 0 || i >= queue.length) return;
+/* =========================================================
+   Playback helpers
+   ========================================================= */
+function playIdx(i) {
+  if (!queue.length) return;
+  if (i < 0 || i >= queue.length) return;
 
-  /* if IFrame not ready yet, remember what to play and bail */
-  if (!playerReady) {
+  if (!playerReady) {                     // IFrame not ready yet → queue it
     pendingPlayIdx = i;
-    updateNow(queue[i]);            // still show the title
+    updateNow(queue[i]);                  // still show “Now Playing”
     return;
   }
 
@@ -304,34 +318,36 @@ function playIdx (i) {
   updateNow(queue[i]);
 }
 
-/* wrap-around skip */
+/* Wrap-around skip (loops) */
 const skip = () => {
   if (!queue.length) return;
   playIdx((currentIdx + 1) % queue.length);
 };
 
-/* ---------- button & slider events ---------- */
+/* =========================================================
+   UI wiring
+   ========================================================= */
 document.getElementById('addBtn').addEventListener('click', async () => {
   const id = document.getElementById('videoId').value.trim();
   if (!id) return;
   const title = await fetchTitle(id);
   queue.unshift({ id, title });
-  saveQueue();
-  renderQueue();
-  playIdx(0);                        // new song auto-plays (or queues if not ready yet)
+  saveQueue(); renderQueue(); playIdx(0);
   document.getElementById('videoId').value = '';
 });
 
 document.getElementById('playPause').addEventListener('click', function () {
   if (!playerReady) return;
   if (player.getPlayerState() === 1) {
-    player.pauseVideo(); this.textContent = 'Play';
+    player.pauseVideo();  this.textContent = 'Play';
   } else {
-    player.playVideo(); this.textContent = 'Pause';
+    player.playVideo();   this.textContent = 'Pause';
   }
 });
+
 document.getElementById('skip').addEventListener('click', skip);
 
+/* progress bar */
 setInterval(() => {
   if (!playerReady || !player.getDuration) return;
   const d = player.getDuration();
@@ -343,13 +359,14 @@ document.getElementById('progress').addEventListener('input', function () {
     player.seekTo((player.getDuration() * this.value) / 100, true);
 });
 
-/* queue controls (up / down / delete / click-to-play) */
+/* queue buttons & click-to-play */
 queueEl.addEventListener('click', e => {
   const { up, down, del } = e.target.dataset;
   if (up) {
     [queue[up - 1], queue[up]] = [queue[up], queue[up - 1]];
   } else if (down) {
-    [queue[+down], queue[+down + 1]] = [queue[+down + 1], queue[+down]];
+    [queue[+down], queue[+down + 1]] =
+      [queue[+down + 1], queue[+down]];
   } else if (del) {
     queue.splice(del, 1);
     if (currentIdx >= del) currentIdx--;
@@ -357,41 +374,51 @@ queueEl.addEventListener('click', e => {
     playIdx([...queueEl.children].indexOf(e.target.parentElement));
     return;
   } else return;
+
   renderQueue(); saveQueue();
 });
 
-/* playlist save / load / delete */
+/* ---------- playlist save / load / delete ---------- */
 document.getElementById('savePlaylist').addEventListener('click', () => {
   const n = document.getElementById('playlistName').value.trim();
   if (!n || !queue.length) return;
   const l = getLists(); l[n] = queue; setLists(l);
   refreshSel(); alert('Playlist saved!');
 });
+
 selPl.addEventListener('change', function () {
-  if (!this.value) return;
-  queue = [...getLists()[this.value]];
-  renderQueue(); saveQueue(); playIdx(0);
+  const n = this.value;
+  if (!n) return;
+  queue = [...getLists()[n]];
+  renderQueue(); saveQueue(); playIdx(0);      // auto-play first track
 });
+
 document.getElementById('deletePlaylist').addEventListener('click', () => {
   if (!selPl.value) return;
   const l = getLists(); delete l[selPl.value]; setLists(l);
   refreshSel(); selPl.value = '';
 });
 
-/* export / import unchanged */
+/* ---------- export / import ---------- */
 document.getElementById('exportPlaylist').addEventListener('click', () => {
   const chosen = selPl.value;
   let data, name;
-  if (chosen) { data = getLists()[chosen]; name = chosen; }
-  else {
+
+  if (chosen) {
+    data = getLists()[chosen]; name = chosen;
+  } else {
     if (!queue.length) { alert('Nothing to export'); return; }
     data = queue; name = 'CurrentQueue';
   }
-  const blob = new Blob([JSON.stringify({ name, data })], { type: 'application/json' });
+
+  const blob = new Blob([JSON.stringify({ name, data })],
+                        { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
-  Object.assign(document.createElement('a'), { href: url, download: name + '.json' }).click();
+  Object.assign(document.createElement('a'),
+    { href: url, download: name + '.json' }).click();
   URL.revokeObjectURL(url);
 });
+
 document.getElementById('importFile').addEventListener('change', function () {
   const f = this.files[0]; if (!f) return;
   const r = new FileReader();
@@ -401,18 +428,24 @@ document.getElementById('importFile').addEventListener('change', function () {
       if (!o.name || !Array.isArray(o.data)) throw 'bad';
       const l = getLists(); l[o.name] = o.data; setLists(l);
       refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
-    } catch { alert('Invalid playlist file'); }
+    } catch {
+      alert('Invalid playlist file');
+    }
   };
   r.readAsText(f); this.value = '';
 });
 
-/* ---------- init ---------- */
+/* =========================================================
+   Init
+   ========================================================= */
 loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
-if (queue.length) playIdx(0);        // queues first song; plays when IFrame ready
+
+if (queue.length) playIdx(0);     // queues first-song playback; runs when IFrame ready
 </script>
+
 
 </body>
 </html>
