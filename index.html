@@ -208,7 +208,7 @@
   </div>
 </div>
 
-<!-- JS START -->
+<!-- =========  JS START  ========= -->
 <script>
 /* ------------------------------------------------------------------
    GLOBAL STATE
@@ -220,9 +220,10 @@ const queueEl = document.getElementById('queue');
 const nowBox  = document.getElementById('nowPlaying');
 const nowT    = document.getElementById('nowTitle');
 const playBtn = document.getElementById('playPause');
+const pipBtn  = document.getElementById('pipBtn');
 
 /* ------------------------------------------------------------------
-   QUEUE PERSISTENCE  (cookies)
+   COOKIE LIST  (queue)
 ------------------------------------------------------------------ */
 const loadQueue = () => {
   const m = document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
@@ -236,8 +237,8 @@ const saveQueue = () =>
 /* ------------------------------------------------------------------
    PLAYLISTS  (localStorage)
 ------------------------------------------------------------------ */
-const LS_KEY = 'playlists',
-      selPl  = document.getElementById('playlistSelect');
+const LS_KEY   = 'playlists',
+      selPl    = document.getElementById('playlistSelect');
 const getLists = () => JSON.parse(localStorage.getItem(LS_KEY) || '{}');
 const setLists = o  => localStorage.setItem(LS_KEY, JSON.stringify(o));
 const refreshSel = () => {
@@ -251,7 +252,7 @@ const refreshSel = () => {
 ------------------------------------------------------------------ */
 function onYouTubeIframeAPIReady () {
   player = new YT.Player('player', {
-    height: '0',   width: '0',
+    height: '225', width: '400',        // YouTube swaps these anyhow
     events: {
       onReady: () => {
         playerReady = true;
@@ -263,13 +264,15 @@ function onYouTubeIframeAPIReady () {
         }
       },
       onStateChange: e => {
-        /* 1 = playing, 2 = paused, 0 = ended, -1/5 = cued/unstarted */
-        if (e.data === 0) skip();      // finished → next (loops)
-        if (e.data === 1) setTiny();   // ensure 144 p
-        /* keep Play/Pause button in sync */
-        if (e.data === 1)            { playBtn.textContent = 'Pause'; }
-        else if (e.data === 2 || e.data === -1 || e.data === 5) {
-                                     playBtn.textContent = 'Play';  }
+        if (e.data === 0) skip();        // ended
+        if (e.data === 1) setTiny();     // force 144 p
+
+        /* sync Play / Pause label */
+        if (e.data === 1) {              // playing
+          playBtn.textContent = 'Pause';
+        } else if ([2, -1, 5].includes(e.data)) {   // paused / cued
+          playBtn.textContent = 'Play';
+        }
       }
     }
   });
@@ -277,7 +280,23 @@ function onYouTubeIframeAPIReady () {
 const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
 /* ------------------------------------------------------------------
-   HELPERS
+   MEDIA SESSION  (lock-screen controls)
+------------------------------------------------------------------ */
+const setMediaMeta = ('mediaSession' in navigator)
+  ? (item) => {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: item.title || 'YouTube Track',
+        artist: 'Matt’s Music Embedder',
+        artwork: [
+          { src:`https://img.youtube.com/vi/${item.id}/hqdefault.jpg`,
+            sizes:'320x180', type:'image/jpeg' }
+        ]
+      });
+    }
+  : () => {};
+
+/* ------------------------------------------------------------------
+   UTILS
 ------------------------------------------------------------------ */
 const fetchTitle = async id => {
   try {
@@ -303,6 +322,7 @@ const updateNow = it => {
   if (!it) { nowBox.style.display = 'none'; return; }
   nowT.textContent = it.title || it.id;
   nowBox.style.display = 'block';
+  setMediaMeta(it);
 };
 
 /* ------------------------------------------------------------------
@@ -311,7 +331,7 @@ const updateNow = it => {
 function playIdx (i) {
   if (!queue.length || i < 0 || i >= queue.length) return;
 
-  if (!playerReady) {          // IFrame not ready → queue request
+  if (!playerReady) {                       // wait for API
     pendingPlayIdx = i;
     updateNow(queue[i]);
     return;
@@ -320,17 +340,18 @@ function playIdx (i) {
   currentIdx = i;
   player.loadVideoById(queue[i].id);
   setTiny();
-  updateNow(queue[i]);         // button will flip when state === 1
+  updateNow(queue[i]);                      // button flips on state===1
 }
 
 const skip = () => {
   if (!queue.length) return;
-  playIdx((currentIdx + 1) % queue.length);   // wrap-around loop
+  playIdx((currentIdx + 1) % queue.length); // loop around
 };
 
 /* ------------------------------------------------------------------
    UI EVENTS
 ------------------------------------------------------------------ */
+/* Add & Play */
 document.getElementById('addBtn').addEventListener('click', async () => {
   const id = document.getElementById('videoId').value.trim();
   if (!id) return;
@@ -340,18 +361,29 @@ document.getElementById('addBtn').addEventListener('click', async () => {
   document.getElementById('videoId').value = '';
 });
 
-playBtn.addEventListener('click', function () {
+/* Play / Pause */
+playBtn.addEventListener('click', () => {
   if (!playerReady) return;
-  if (player.getPlayerState() === 1) {          // playing → pause
-    player.pauseVideo();
-  } else {                                      // paused / cued → play
-    player.playVideo();
+  if (player.getPlayerState() === 1) player.pauseVideo();
+  else                               player.playVideo();
+});
+
+/* Skip */
+document.getElementById('skip').addEventListener('click', skip);
+
+/* Picture-in-Picture / Background */
+pipBtn.addEventListener('click', async () => {
+  if (!playerReady) return;
+  const iframe = player.getIframe();
+  if ('requestPictureInPicture' in iframe) {
+    try { await iframe.requestPictureInPicture(); }
+    catch { /* ignored */ }
+  } else {
+    alert('Picture-in-Picture isn’t supported on this device.');
   }
 });
 
-document.getElementById('skip').addEventListener('click', skip);
-
-/* progress slider */
+/* Progress bar */
 setInterval(() => {
   if (!playerReady || !player.getDuration) return;
   const d = player.getDuration();
@@ -364,7 +396,7 @@ document.getElementById('progress').addEventListener('input', function () {
     player.seekTo((player.getDuration() * this.value) / 100, true);
 });
 
-/* queue buttons + click-to-play */
+/* Queue list interactions */
 queueEl.addEventListener('click', e => {
   const { up, down, del } = e.target.dataset;
   if (up)        [queue[up-1], queue[up]] = [queue[up], queue[up-1]];
@@ -374,6 +406,7 @@ queueEl.addEventListener('click', e => {
     playIdx([...queueEl.children].indexOf(e.target.parentElement));
     return;
   } else return;
+
   renderQueue(); saveQueue();
 });
 
@@ -408,7 +441,7 @@ document.getElementById('exportPlaylist').addEventListener('click', () => {
   }
   const blob = new Blob([JSON.stringify({ name, data })],
                         { type:'application/json' });
-  const url = URL.createObjectURL(blob);
+  const url  = URL.createObjectURL(blob);
   Object.assign(document.createElement('a'),
     { href:url, download:name+'.json' }).click();
   URL.revokeObjectURL(url);
@@ -435,13 +468,12 @@ loadQueue();
 renderQueue();
 refreshSel();
 updateNow(queue[currentIdx]);
-if (queue.length) playIdx(0);        // autostarts after IFrame ready
+if (queue.length) playIdx(0);          // will actually start once API ready
 </script>
 
-<!-- load the API AFTER the script so the callback is defined -->
+<!-- Load the YouTube API *after* the code so the callback exists -->
 <script src="https://www.youtube.com/iframe_api"></script>
-<!-- JS END -->
-
+<!-- =========  JS END  ========= -->
 
 </body>
 </html>
