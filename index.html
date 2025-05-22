@@ -352,7 +352,7 @@ const updateNow = it => {
     nowBox.style.display = 'none';
     return;
   }
-  // show “Title — Artist” if artist exists
+  // Title — Artist  (artist is optional)
   nowT.textContent = it.title + (it.artist ? ' — ' + it.artist : '');
   nowBox.style.display = 'block';
 };
