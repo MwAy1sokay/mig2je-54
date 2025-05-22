@@ -258,12 +258,17 @@ function onYouTubeIframeAPIReady () {          // called automatically by API
         }
       },
       onStateChange: e => {
-        if (e.data === 0) skip();              // track ended → next (loops)
-        if (e.data === 1) setTiny();           // force 144 p every time
-      }
-    }
-  });
+  if (e.data === 0) skip();           // finished
+  if (e.data === 1) setTiny();        // keep 144 p
+
+  /* NEW — keep Play/Pause label in sync */
+  if (e.data === 1) {                 // actually playing
+    playBtn.textContent = 'Pause';
+  } else if (e.data === 2 || e.data === -1 || e.data === 5) { // paused / cued
+    playBtn.textContent = 'Play';
+  }
 }
+
 const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
 
 /* -------------------------------------------------
