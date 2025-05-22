@@ -232,6 +232,23 @@ input:-webkit-autofill {
   box-shadow: 0 0 0px 1000px var(--panel) inset !important;
   -webkit-text-fill-color: var(--text) !important;
 }
+input[type="text"],
+input#videoId,
+input#playlistName {
+  background-color: var(--panel) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .5rem .6rem;
+  width: 100%;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  box-shadow: 0 0 0px 1000px var(--panel) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  color: var(--text) !important;
+  background-color: var(--panel) !important;
+}
 </style>
 </head>
 <body>
