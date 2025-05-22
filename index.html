@@ -434,15 +434,27 @@ document.getElementById('exportPlaylist').addEventListener('click',()=>{
   Object.assign(document.createElement('a'),{href:url,download:name+'.json'}).click();
   URL.revokeObjectURL(url);
 });
-document.getElementById('importFile').addEventListener('change',function(){
-  const f=this.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=e=>{try{const o=JSON.parse(e.target.result);
-    if(!o.name||!Array.isArray(o.data))throw'bad';
-    const l=getLists();l[o.name]=o.data;setLists(l);
-    refreshSel();alert('Imported “‘'+o.name+'” playlist!');}
-    catch{alert('Invalid playlist file');}};
-  r.readAsText(f);this.value='';
+document.getElementById('importFile').addEventListener('change', function () {
+  const f = this.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = async e => {                                  // 🆕 make handler async
+    try {
+      const o = JSON.parse(e.target.result);
+      if (!o.name || !Array.isArray(o.data)) throw 'bad';
+
+      /* ----------  back-fill artist on imported items ---------- */
+      for (const it of o.data) {
+        if (!it.artist) {                                   // missing artist?
+          const info = await fetchVideoInfo(it.id);         // reuse helper
+          it.artist = info.artist;
+        }
+      }                                                     // 🆕 end back-fill loop
+
+      const l = getLists(); l[o.name] = o.data; setLists(l);
+      refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
+    } catch { alert('Invalid playlist file'); }
+  };
+  r.readAsText(f); this.value = '';
 });
 
 /* ---------- init ---------- */
