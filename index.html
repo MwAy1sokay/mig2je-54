@@ -96,17 +96,17 @@ select:focus-visible {
 }
 
 #nowPlaying{
-  display:flex;                   /* NEW */
-  align-items:center;             /* vertically center text */
-  gap:.65rem;                     /* same as --gap */
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:.7rem .9rem;
-  font-weight:600;
-  margin-top:var(--gap);
+  display:flex;            /* already there but repeat for clarity   */
+  align-items:center;      /* vertical-centre both items             */
+  gap:.75rem;              /* space between art and title            */
+  flex-wrap:nowrap;        /* 🚫 forbid wrapping onto a new line      */
 }
-
+#nowTitle{
+  flex:1 1 auto;           /* take remaining width, shrink if needed */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 /* responsive video square */
 #videoWrap{
   flex:0 0 auto;
