@@ -249,6 +249,20 @@ input:-webkit-autofill:focus {
   color: var(--text) !important;
   background-color: var(--panel) !important;
 }
+/* Tiny album-art / video square */
+#videoWrap{
+  width:96px;               /* pick any size you like */
+  height:96px;
+  border-radius:6px;
+  overflow:hidden;
+  background:#000;          /* black letterbox behind videos */
+  float:right;              /* tucks against Now-Playing bar, etc. */
+  margin-left:.8rem;        /* little gap from text */
+}
+#videoWrap #player{
+  width:100%; height:100%;
+  pointer-events:none;      /* disables YouTube tap-to-pause overlay */
+}
 </style>
 </head>
 <body>
@@ -278,8 +292,7 @@ input:-webkit-autofill:focus {
   <label>Import <input type="file" id="importFile" accept=".json"></label>
 </div>
 
-<!-- hidden 1 × 1 iframe (still PiP-capable on desktop) -->
-<div style="position:relative;width:1px;height:1px;overflow:hidden">
+<div id="videoWrap">
   <div id="player" allow="autoplay; picture-in-picture"></div>
 </div>
 
