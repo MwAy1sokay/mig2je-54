@@ -337,6 +337,22 @@ const fetchVideoInfo = async id => {
   }
 };
 
+/* ------------------------------------------------------------------
+   one-time migration: add artist to legacy queue items
+------------------------------------------------------------------ */
+async function backfillArtists () {
+  const tasks = queue.map(async (it, idx) => {
+    if (it.artist) return;                       // already has artist
+    try {
+      const info = await fetchVideoInfo(it.id);  // same helper you use on add
+      queue[idx].artist = info.artist;           // keep existing title
+    } catch { /* ignore failures */ }
+  });
+  await Promise.all(tasks);
+  saveQueue();           // write updated cookie / localStorage
+  renderQueue();         // show new “— Artist” labels
+  updateNow(queue[currentIdx]);
+}
 const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
   <li>
     <span class="title">
@@ -430,8 +446,12 @@ document.getElementById('importFile').addEventListener('change',function(){
 });
 
 /* ---------- init ---------- */
-loadQueue();renderQueue();refreshSel();updateNow(queue[currentIdx]);
-if(queue.length)playIdx(0);
+(async () => {
+  loadQueue();
+  await backfillArtists();          // <— new
+  refreshSel();
+  if (queue.length) playIdx(0);
+})();
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
