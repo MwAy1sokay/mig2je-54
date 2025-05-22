@@ -183,6 +183,7 @@
   <div class="controls">
     <button id="playPause">Play</button>
     <button id="skip">Skip</button>
+    <button id="pipBtn">Background</button>
     <input type="range" id="progress" min="0" max="100" value="0">
   </div>
 
@@ -200,7 +201,12 @@
     <label>Import <input type="file" id="importFile" accept=".json"></label>
   </div>
 
-  <div id="player"></div>
+  <div style="position:relative;width:1px;height:1px;overflow:hidden">
+  <div id="player"
+       style="width:400px;height:225px"          <!-- actual 16 : 9 frame -->
+       allow="autoplay; picture-in-picture">
+  </div>
+</div>
 
 <!-- JS START -->
 <script>
