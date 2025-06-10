@@ -311,6 +311,8 @@ const nowBox    =document.getElementById('nowPlaying'),nowT=document.getElementB
 const playBtn   =document.getElementById('playPause');
 const prevBtn   =document.getElementById('prev');
 const timeLabel =document.getElementById('time');
+const progress   = document.getElementById('progress');   // ← NEW
+let   vidDuration = 0;                                    // ← NEW (cached total)
 /* ---------- persistence ---------- */
 const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
                      queue=m?JSON.parse(decodeURIComponent(m[1])):[];};
@@ -417,26 +419,23 @@ prevBtn.addEventListener('click', () => {
   playIdx(back);
 });
 const formatTime = s => {
-  const m = Math.floor(s / 60);
+  const m   = Math.floor(s / 60);
   const sec = Math.floor(s % 60).toString().padStart(2,'0');
   return m + ':' + sec;
 };
-setInterval(()=>{if(!playerReady||!player.getDuration)return;
-  const d=player.getDuration();
-  if(d)document.getElementById('progress').value=(player.getCurrentTime()/d)*100;},1000);
-document.getElementById('progress').addEventListener('input',function(){
-  if(playerReady&&player.getDuration)player.seekTo(player.getDuration()*this.value/100,true);
-  if (playerReady && player.getDuration){
-  const dur = player.getDuration();
-  const cur = player.getCurrentTime();
-  if (dur){
-    progress.value = (cur / dur) * 100;
-    timeLabel.textContent =
-      formatTime(cur) + ' / ' + formatTime(dur);
-  }
-}
-});
+setInterval(() => {
+  if (!playerReady || !player.getDuration) return;
 
+  const dur = player.getDuration();
+  if (dur) vidDuration = dur;     // cache once it’s known
+  if (!vidDuration)   return;     // still zero – wait for next tick
+
+  const cur = player.getCurrentTime();
+  progress.value    = (cur / vidDuration) * 100;
+  timeLabel.textContent =
+        formatTime(cur) + ' / ' + formatTime(vidDuration);
+
+}, 1000);
 qEl.addEventListener('click',e=>{
 const { del } = e.target.dataset;
 if (del) {
