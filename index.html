@@ -338,15 +338,21 @@ async function backfillArtists () {
   renderQueue();         // show new “— Artist” labels
   updateNow(queue[currentIdx]);
 }
-const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
-  <li>
-    <span class="title">
-  ${it.title || it.id}
-  ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}</span>
-    <button ${i?'':'disabled'} data-up="${i}">↑</button>
-    <button ${i<queue.length-1?'':'disabled'} data-down="${i}">↓</button>
-    <button data-del="${i}">✕</button>
-  </li>`));};
+const renderQueue = () => {
+  qEl.innerHTML = '';
+  queue.forEach((it, i) => qEl.insertAdjacentHTML('beforeend', `
+    <li>
+      <img class="thumb"
+           loading="lazy"
+           src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg"
+           alt="">
+      <span class="title">
+        ${it.title || it.id}
+        ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
+      </span>
+      <button data-del="${i}">✕</button>
+    </li>`));
+};
 /* ---------- helpers ---------- */
 const updateNow = it => {
   if (!it) {
@@ -382,10 +388,11 @@ document.getElementById('progress').addEventListener('input',function(){
 });
 
 qEl.addEventListener('click',e=>{
-  const{up,down,del}=e.target.dataset;
-  if(up)        [queue[up-1],queue[up]]=[queue[up],queue[up-1]];
-  else if(down) [queue[+down],queue[+down+1]]=[queue[+down+1],queue[+down]];
-  else if(del)  {queue.splice(del,1);if(currentIdx>=del)currentIdx--;}
++  const { del } = e.target.dataset;
++  if (del) {
++    queue.splice(del, 1);
++    if (currentIdx >= del) currentIdx--;
++  }
   else if(e.target.classList.contains('title')){
     playIdx([...qEl.children].indexOf(e.target.parentElement));return;
   } else return;
