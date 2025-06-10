@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<div class="search-bar<html lang="en">
 <head>
 <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -67,7 +67,6 @@ select {
 input[type="text"],
 select {
   padding: .5rem .6rem;
-  width: 100%;
 }
 
 button {
@@ -287,21 +286,25 @@ input:-webkit-autofill:focus {
 .search-bar button {
   flex: 0 0 auto;    /* keep button at its natural size */
 }
+.search-bar input {
+  width: auto;          /* override the 100 % */
+  flex: 1 1 12rem;      /* let them grow and wrap */
+}
 </style>
 </head>
 <body>
 <h1>Mattmusikspelaresajt  1.42</h1>
 
 <!-- ────── Search official audio ────── -->
-<div class="search-bar" style="display:flex;gap:var(--gap);flex-wrap:wrap;">
+<div class="search-bar">
   <input id="artistInput"  placeholder="Artist name">
   <input id="songInput"    placeholder="Song title">
   <button id="searchBtn">Search & Play</button>
 </div>
 
-<div class="search-bar" style="display:flex;gap:var(--gap);flex-wrap:wrap;">
+<div class="search-bar">
 <input id="videoId" placeholder="YouTube video ID">
-<button id="addBtn" style="margin-top:.75rem">Add &amp; Play</button>
+<button id="addBtn">Add &amp; Play</button>
 </div>
 
 <div id="nowPlaying">
