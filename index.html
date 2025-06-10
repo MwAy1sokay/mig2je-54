@@ -116,6 +116,10 @@ select:focus-visible{
 }
 .controls button{flex:0 0 auto}
 
+.search-mode{display:flex;gap:.8rem;align-items:center}
+
+.hidden{display:none}
+
 .controls button{
   padding:.25rem .6rem;
   font-size:1.2rem;
@@ -311,7 +315,11 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   <input id="songInput"   type="text" placeholder="Song title">
   <button id="searchBtn">Search & Play</button>
 </div>
-
+<div class="search-mode" style="font-size:.9rem;margin-top:.4rem">
+  <label><input type="radio" name="mode" value="artist" checked> Artist + Title</label>
+  &nbsp;
+  <label><input type="radio" name="mode" value="code"> Paste ID</label>
+</div>
 <div class="search-bar">
   <input id="videoId" type="text" placeholder="YouTube video ID">
   <button id="addBtn">Add & Play</button>
@@ -337,6 +345,15 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 let queue=[],currentIdx=-1;
 let player,playerReady=false,pendingPlay=null;
 
+const artistBox = document.getElementById('artistInput');
+const songBox   = document.getElementById('songInput');
+const modeRadios = document.querySelectorAll('input[name="mode"]');
+
+modeRadios.forEach(r => r.addEventListener('change', () => {
+  const codeMode = document.querySelector('input[name="mode"]:checked').value === 'code';
+  artistBox.classList.toggle('hidden',  codeMode);
+  songBox.placeholder = codeMode ? 'YouTube video ID' : 'Song title';
+}));
 
 const qEl=document.getElementById('queue');
 new Sortable(qEl,{
@@ -611,6 +628,18 @@ async function searchOfficialAudio (artist, song) {
 
 /* UI hook */
 document.getElementById('searchBtn').addEventListener('click', async () => {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
+if (mode === 'code'){
+  const id = songBox.value.trim();     // ID pasted into "song" box
+  if (!id) { alert('Paste a YouTube ID'); return; }
+
+  // quick add
+  queue.unshift({id,title:id,artist:''});
+  saveQueue(); renderQueue(); playIdx(0);
+  songBox.value = '';
+  return;                               // ⬅️ skip the artist-title code
+}
   const artist = document.getElementById('artistInput').value.trim();
   const song   = document.getElementById('songInput').value.trim();
   if (!artist || !song) { alert('Type both artist and song'); return; }
