@@ -266,13 +266,6 @@ let queue=[],currentIdx=-1;
 let player,playerReady=false,pendingPlay=null;
 
 const qEl=document.getElementById('queue');
-/* ---------- state ---------- */
-let queue=[], currentIdx=-1;
-let player, playerReady=false, pendingPlay=null;
-
-const qEl = document.getElementById('queue');
-
-/* NEW: make the <ul id="queue"> sortable */
 new Sortable(qEl,{
   animation:150,          // smooth slide
   handle: 'span.title',   // drag by the text, not by the buttons
