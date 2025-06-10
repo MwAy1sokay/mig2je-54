@@ -99,6 +99,7 @@ select:focus-visible{
 }
 /* responsive video square */
 #videoWrap{
+  position: relative;
   flex:0 0 auto;
   width:clamp(48px,18vw,80px);
   aspect-ratio:1/1;
@@ -243,6 +244,25 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 
 #nowTitle{font-size:1.15rem}
 #nowTitle small{font-size:.9em;opacity:.7}
+/* buffering overlay */
+#buffering{
+  position:absolute;
+  inset:0;                     /* full cover */
+  display:none;                /* toggled in JS */
+  place-content:center;        /* center spinner */
+  backdrop-filter:blur(2px);   /* subtle glass */
+}
+
+/* simple ring spinner */
+#buffering::after{
+  content:'';
+  width:32px;height:32px;
+  border:4px solid #fff3;
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -263,6 +283,7 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 <div id="nowPlaying">
   <div id="videoWrap">
     <div id="player" allow="autoplay; picture-in-picture"></div>
+    <div id="buffering" aria-hidden="true"></div>
   </div>
   <span id="nowTitle"></span>
 </div>
@@ -311,8 +332,10 @@ const nowBox    =document.getElementById('nowPlaying'),nowT=document.getElementB
 const playBtn   =document.getElementById('playPause');
 const prevBtn   =document.getElementById('prev');
 const timeLabel =document.getElementById('time');
-const progress  =document.getElementById('progress');   // ← NEW
-let   vidDuration = 0;                                    // ← NEW (cached total)
+const progress  =document.getElementById('progress');
+const buffering =document.getElementById('buffering');
+let   vidDuration = 0; 
+
 /* ---------- persistence ---------- */
 const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
                      queue=m?JSON.parse(decodeURIComponent(m[1])):[];};
@@ -336,6 +359,7 @@ function onYouTubeIframeAPIReady(){
         if(e.data===0) skip();
         if(e.data===1) setTiny();
         playBtn.textContent = (e.data === 1) ? '⏸' : '▶';
+        buffering.style.display = (e.data === 3) ? 'grid' : 'none';
       }
     }
   });
