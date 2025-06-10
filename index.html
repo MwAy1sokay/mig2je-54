@@ -218,6 +218,15 @@ input#playlistName{
 .search-bar + .search-bar{
   margin-top: var(--gap);   /* ≈0.65 rem – adjust if you want more/less */
 }
+.drag-handle{
+  cursor:grab;
+  font-size:1.1rem;
+  line-height:1;
+  padding:0 .25rem;
+  user-select:none;
+  opacity:.7;
+}
+li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 
 #addBtn{margin-bottom:1rem}
 
@@ -275,10 +284,9 @@ let player,playerReady=false,pendingPlay=null;
 
 const qEl=document.getElementById('queue');
 new Sortable(qEl,{
-  animation:150,          // smooth slide
-  handle: 'span.title',   // drag by the text, not by the buttons
+  handle: '.drag-handle',
+  animation:150,
   onEnd: e => {
-    // move the item inside our JS queue to match the new DOM order
     queue.splice(e.newIndex,0, queue.splice(e.oldIndex,1)[0]);
     saveQueue();
   }
@@ -298,7 +306,21 @@ const getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}');
 const setLists=o=>localStorage.setItem(LS,JSON.stringify(o));
 const refreshSel=()=>{sel.innerHTML='<option value="">— Load playlist —</option>';
   Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`));};
-
+/* ---------- DragHandle ---------- */
+const renderQueue = () => {
+  qEl.innerHTML = '';
+  queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend',`
+    <li>
+      <span class="drag-handle" aria-hidden="true">≡</span>
+      <img class="thumb" loading="lazy"
+           src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
+      <span class="title">
+        ${it.title || it.id}
+        ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
+      </span>
+      <button data-del="${i}">✕</button>
+    </li>`));
+};
 /* ---------- YouTube ---------- */
 function onYouTubeIframeAPIReady(){
   player=new YT.Player('player',{
