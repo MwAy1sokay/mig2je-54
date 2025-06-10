@@ -320,10 +320,6 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   &nbsp;
   <label><input type="radio" name="mode" value="code"> Paste ID</label>
 </div>
-<div class="search-bar">
-  <input id="videoId" type="text" placeholder="YouTube video ID">
-  <button id="addBtn">Add & Play</button>
-</div>
 
 <h2>Music Queue</h2>
 <div id="queueWrap"><ul id="queue"></ul></div>
@@ -474,11 +470,6 @@ function playIdx (i) {
 }
 const skip=()=>{if(queue.length)playIdx((currentIdx+1)%queue.length);};
 /* ---------- UI ---------- */
-document.getElementById('addBtn').addEventListener('click',async()=>{
-  const id=document.getElementById('videoId').value.trim();if(!id)return;
-  const info = await fetchVideoInfo(id);queue.unshift({ id, title: info.title, artist: info.artist });
-  saveQueue();renderQueue();playIdx(0);document.getElementById('videoId').value='';
-});
 playBtn.addEventListener('click',()=>{if(!playerReady)return;
   (player.getPlayerState()===1)?player.pauseVideo():player.playVideo();});
 document.getElementById('skip').addEventListener('click',skip);
