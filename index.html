@@ -280,7 +280,13 @@ input:-webkit-autofill:focus {
   font-size:.9em;        /* a bit smaller */
   opacity:.7;            /* lighter grey */
 }
-
+.search-bar input {
+  flex: 1 1 12rem;   /* grow but don’t insist on 100 % */
+  width: auto;       /* override the 100 % from the generic rule */
+}
+.search-bar button {
+  flex: 0 0 auto;    /* keep button at its natural size */
+}
 </style>
 </head>
 <body>
