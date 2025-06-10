@@ -624,56 +624,45 @@ async function searchOfficialAudio (artist, song) {
 
 /* UI hook */
 document.getElementById('searchBtn').addEventListener('click', async () => {
-  const mode = document.querySelector('input[name="mode"]:checked').value;
+  const mode   = document.querySelector('input[name="mode"]:checked').value;
+  const artist = artistBox.value.trim();
+  const song   = songBox.value.trim();
 
-if (mode === 'code'){
-  const id = songBox.value.trim();     // ID pasted into "song" box
-  if (!id) { alert('Paste a YouTube ID'); return; }
+  /* ── Paste-ID mode ───────────────────────────────────────────── */
+  if (mode === 'code') {
+    const id = song;                       // user typed ID in “song” box
+    if (!id) { alert('Paste a YouTube ID'); return; }
 
-if (mode === 'code'){
-  const id = songBox.value.trim();
-  if (!id) { alert('Paste a YouTube ID'); return; }
+    const info = await fetchVideoInfo(id); // fetch real title + artist
+    queue.unshift({ id, title: info.title, artist: info.artist });
 
-  const info = await fetchVideoInfo(id);   // ← get title + artist
+    saveQueue(); renderQueue(); playIdx(0);
+    songBox.value = '';
+    return;                                 // stop here
+  }
 
-  queue.unshift({
-    id,
-    title : info.title,
-    artist: info.artist
-  });
-
-  saveQueue();
-  renderQueue();
-  playIdx(0);
-
-  songBox.value = '';
-  return;                                  
-}
-}
-  const artist = document.getElementById('artistInput').value.trim();
-  const song   = document.getElementById('songInput').value.trim();
-  if (!artist || !song) { alert('Type both artist and song'); return; }
+  /* ── Artist + Title mode ─────────────────────────────────────── */
+  if (!artist || !song) {
+    alert('Type both artist and song');
+    return;
+  }
 
   try {
     const hit = await searchOfficialAudio(artist, song);
     if (!hit) { alert('No official audio found 😕'); return; }
 
-    // ── NEW: derive canonical artist name ─────────────────────────
-    const chanTitle   = hit.snippet.channelTitle || artist;
-    const cleanArtist = chanTitle.replace(/\s*-\s*Topic\s*$/i, '').trim();
+    const cleanArtist = hit.snippet.channelTitle
+                          .replace(/\s*-\s*Topic\s*$/i, '')
+                          .trim();
 
     queue.unshift({
-      id:    hit.id.videoId,
-      title: hit.snippet.title,
-      artist: cleanArtist       // use the cleaned-up value
+      id    : hit.id.videoId,
+      title : hit.snippet.title,
+      artist: cleanArtist
     });
-    // ──────────────────────────────────────────────────────────────
 
-    saveQueue();
-    renderQueue();
-    playIdx(0);
-    document.getElementById('artistInput').value = '';
-    document.getElementById('songInput').value   = '';
+    saveQueue(); renderQueue(); playIdx(0);
+    artistBox.value = ''; songBox.value = '';
   } catch (err) {
     console.error(err);
     alert('Search failed – check the console or your API quota');
