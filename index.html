@@ -151,6 +151,19 @@ select:focus-visible{
 
 h2{margin:1.6rem 0 .7rem}
 
+#art{
+  display:block;        /* removes small inline gap */
+  width:100%;
+  height:100%;          /* match the square wrapper */
+  object-fit:cover;     /* fill & crop */
+  object-position:center;
+
+  border-radius:6px;    /* keep your rounded corners */
+  transition:opacity .4s;
+  opacity:0;
+}
+#art[src]{opacity:1}    /* fade in when src set */
+
 #queueWrap{
   max-height:50vh;
   overflow:auto;
@@ -273,8 +286,8 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 <div id="nowPlaying">
   <div id="videoWrap">
   <div id="player" allow="autoplay"></div>
-  <img id="art" alt="" style="width:100%;height:auto;border-radius:6px">
-  <div id="buffering" aria-hidden="true"></div>
+<img id="art" alt="">  
+<div id="buffering" aria-hidden="true"></div>
 </div>
   <span id="nowTitle"></span>
 </div>
