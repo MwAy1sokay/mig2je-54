@@ -306,21 +306,6 @@ const getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}');
 const setLists=o=>localStorage.setItem(LS,JSON.stringify(o));
 const refreshSel=()=>{sel.innerHTML='<option value="">— Load playlist —</option>';
   Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`));};
-/* ---------- DragHandle ---------- */
-const renderQueue = () => {
-  qEl.innerHTML = '';
-  queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend',`
-    <li>
-      <span class="drag-handle" aria-hidden="true">≡</span>
-      <img class="thumb" loading="lazy"
-           src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
-      <span class="title">
-        ${it.title || it.id}
-        ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
-      </span>
-      <button data-del="${i}">✕</button>
-    </li>`));
-};
 /* ---------- YouTube ---------- */
 function onYouTubeIframeAPIReady(){
   player=new YT.Player('player',{
@@ -368,14 +353,14 @@ async function backfillArtists () {
   renderQueue();         // show new “— Artist” labels
   updateNow(queue[currentIdx]);
 }
+/* ---------- DragHandle ---------- */
 const renderQueue = () => {
   qEl.innerHTML = '';
-  queue.forEach((it, i) => qEl.insertAdjacentHTML('beforeend', `
+  queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend', `
     <li>
-      <img class="thumb"
-           loading="lazy"
-           src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg"
-           alt="">
+      <span class="drag-handle" aria-hidden="true">≡</span>
+      <img class="thumb" loading="lazy"
+           src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
       <span class="title">
         ${it.title || it.id}
         ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
