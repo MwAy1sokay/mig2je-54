@@ -115,6 +115,8 @@ select:focus-visible{
   gap:var(--gap);
   flex-wrap:wrap;
   margin-top:1.05rem
+  margin-bottom: var(--gap);   /* = .65 rem by your variables */
+}
 }
 .controls button{flex:0 0 auto}
 
@@ -262,8 +264,7 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   border-radius:50%;
   animation:spin .8s linear infinite;
 }
-#nowPlaying{margin-bottom:1.2rem}
-#controls{margin-bottom:1.2rem}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
