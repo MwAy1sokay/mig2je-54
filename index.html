@@ -110,8 +110,9 @@ select:focus-visible{
   align-items:center;
   gap:var(--gap);
   flex-wrap:wrap;
+
   margin-top:1.05rem;
-  margin-bottom: var(--gap);   /* = .65 rem by your variables */
+  margin-bottom:var(--gap);           /* space before the search bars */
 }
 .controls button{flex:0 0 auto}
 
@@ -213,6 +214,14 @@ input[type="text"],select{
   color:var(--text)!important;
   border:1px solid var(--border);
   border-radius:4px
+}
+#videoWrap{
+  position:relative;                  /* keeps #player + #buffering stacked */
+  width:clamp(120px, 40vw, 220px);    /* pick a size you like */
+  aspect-ratio:1/1;                   /* perfect square */
+  border-radius:6px;
+  overflow:hidden;                    /* crop the artwork */
+  background:#000;                    /* fallback while loading */
 }
 input:-webkit-autofill{
   background-color:var(--panel)!important;
