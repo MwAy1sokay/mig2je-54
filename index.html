@@ -97,17 +97,13 @@ select:focus-visible{
   overflow:hidden;
   text-overflow:ellipsis
 }
-/* responsive video square */
-#videoWrap{
-  position: relative;
-  flex:0 0 auto;
-  width:clamp(48px,18vw,80px);
-  aspect-ratio:1/1;
-  border-radius:6px;
-  overflow:hidden;
-  background:#000
+#videoWrap #player{
+  position:absolute;   /* take it out of normal flow */
+  top:0; left:0;
+  width:1px; height:1px;   /* practically invisible */
+  opacity:0;               /* no red rectangle */
+  pointer-events:none;
 }
-#videoWrap #player{width:1px;height:1px;pointer-events:none}
 
 .controls{
   display:flex;
