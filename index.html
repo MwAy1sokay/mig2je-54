@@ -117,6 +117,17 @@ select:focus-visible{
 }
 .controls button{flex:0 0 auto}
 
+.controls button{
+  padding:.25rem .6rem;
+  font-size:1.2rem;
+}
+#time{
+  font-variant-numeric:tabular-nums;
+  opacity:.8;
+}
+@media(max-width:600px){
+  #time{flex:1 1 100%;text-align:left;margin-top:.25rem}
+}
 #progress{
   flex:1 1 100%;
   margin-top:.45rem;
@@ -257,8 +268,12 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 </div>
 
 <div class="controls">
-  <button id="playPause">Play</button>
-  <button id="skip">Skip</button>
+  <button id="prev" title="Previous">⏮</button>
+  <button id="playPause" title="Play / Pause">▶</button>
+  <button id="skip" title="Next">⏭</button>
+
+  <span id="time" style="min-width:5.5rem;text-align:center">0:00 / 0:00</span>
+
   <input type="range" id="progress" min="0" max="100" value="0">
 </div>
 
@@ -282,6 +297,7 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 let queue=[],currentIdx=-1;
 let player,playerReady=false,pendingPlay=null;
 
+
 const qEl=document.getElementById('queue');
 new Sortable(qEl,{
   handle: '.drag-handle',
@@ -291,9 +307,10 @@ new Sortable(qEl,{
     saveQueue();
   }
 });
-const nowBox=document.getElementById('nowPlaying'),nowT=document.getElementById('nowTitle');
-const playBtn=document.getElementById('playPause');
-
+const nowBox    =document.getElementById('nowPlaying'),nowT=document.getElementById('nowTitle');
+const playBtn   =document.getElementById('playPause');
+const prevBtn   =document.getElementById('prev');
+const timeLabel =document.getElementById('time');
 /* ---------- persistence ---------- */
 const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
                      queue=m?JSON.parse(decodeURIComponent(m[1])):[];};
@@ -316,7 +333,7 @@ function onYouTubeIframeAPIReady(){
       onStateChange:e=>{
         if(e.data===0) skip();
         if(e.data===1) setTiny();
-        playBtn.textContent=(e.data===1)?'Pause':'Play';
+        playBtn.textContent = (e.data === 1) ? '⏸' : '▶';
       }
     }
   });
@@ -394,12 +411,30 @@ document.getElementById('addBtn').addEventListener('click',async()=>{
 playBtn.addEventListener('click',()=>{if(!playerReady)return;
   (player.getPlayerState()===1)?player.pauseVideo():player.playVideo();});
 document.getElementById('skip').addEventListener('click',skip);
-
+prevBtn.addEventListener('click', () => {
+  if (!queue.length) return;
+  const back = (currentIdx - 1 + queue.length) % queue.length;
+  playIdx(back);
+});
+const formatTime = s => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2,'0');
+  return m + ':' + sec;
+};
 setInterval(()=>{if(!playerReady||!player.getDuration)return;
   const d=player.getDuration();
   if(d)document.getElementById('progress').value=(player.getCurrentTime()/d)*100;},1000);
 document.getElementById('progress').addEventListener('input',function(){
   if(playerReady&&player.getDuration)player.seekTo(player.getDuration()*this.value/100,true);
+  if (playerReady && player.getDuration){
+  const dur = player.getDuration();
+  const cur = player.getCurrentTime();
+  if (dur){
+    progress.value = (cur / dur) * 100;
+    timeLabel.textContent =
+      formatTime(cur) + ' / ' + formatTime(dur);
+  }
+}
 });
 
 qEl.addEventListener('click',e=>{
