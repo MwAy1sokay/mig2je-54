@@ -433,7 +433,7 @@ async function backfillArtists () {
 const renderQueue = () => {
   qEl.innerHTML = '';
   queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend', `
-    <li>
+    <li contextmenu="ctx" data-id="${it.id}">
       <span class="drag-handle" aria-hidden="true">≡</span>
       <img class="thumb" loading="lazy"
            src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
@@ -540,6 +540,11 @@ sel.addEventListener('change',function(){
 document.getElementById('deletePlaylist').addEventListener('click',()=>{
   if(!sel.value)return;const l=getLists();delete l[sel.value];setLists(l);
   refreshSel();sel.value='';
+});
+/* link to yt */
+document.getElementById('openYT').addEventListener('click', () => {
+  const li = document.querySelector('li:hover');
+  if (li) window.open('https://youtu.be/' + li.dataset.id, '_blank');
 });
 
 /* export / import */
@@ -684,5 +689,8 @@ if (mode === 'code'){
 })();
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
+<menu id="ctx" type="context">
+  <menuitem id="openYT" label="Open on YouTube"></menuitem>
+</menu>
 </body>
 </html>
