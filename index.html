@@ -159,6 +159,7 @@ h2{margin:1.6rem 0 .7rem}
 #queue li:hover{background:#181818}
 #queue li button{padding:.25rem .7rem}
 
+
 .playlist-controls{
   margin-top:1.8rem;
   padding:1rem;
@@ -258,12 +259,29 @@ input#playlistName{
 </div>
 
 <!-- ==========  SCRIPT  ========== -->
+ <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 /* ---------- state ---------- */
 let queue=[],currentIdx=-1;
 let player,playerReady=false,pendingPlay=null;
 
 const qEl=document.getElementById('queue');
+/* ---------- state ---------- */
+let queue=[], currentIdx=-1;
+let player, playerReady=false, pendingPlay=null;
+
+const qEl = document.getElementById('queue');
+
+/* NEW: make the <ul id="queue"> sortable */
+new Sortable(qEl,{
+  animation:150,          // smooth slide
+  handle: 'span.title',   // drag by the text, not by the buttons
+  onEnd: e => {
+    // move the item inside our JS queue to match the new DOM order
+    queue.splice(e.newIndex,0, queue.splice(e.oldIndex,1)[0]);
+    saveQueue();
+  }
+});
 const nowBox=document.getElementById('nowPlaying'),nowT=document.getElementById('nowTitle');
 const playBtn=document.getElementById('playPause');
 
