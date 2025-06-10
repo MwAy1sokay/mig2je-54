@@ -397,13 +397,18 @@ const updateNow = it => {
   nowBox.style.display = 'flex';        // <— use flex, not block
 };
 /* ---------- playback ---------- */
-function playIdx(i){
-  if(!queue.length||i<0||i>=queue.length)return;
-  if(!playerReady){pendingPlay=i;updateNow(queue[i]);return;}
-  currentIdx=i;player.loadVideoById(queue[i].id);setTiny();updateNow(queue[i]);
+function playIdx (i) {
+  if (!queue.length || i < 0 || i >= queue.length) return;
+  if (!playerReady) { pendingPlay = i; updateNow(queue[i]); return; }
+  currentIdx = i;
+  player.loadVideoById(queue[i].id);
+  setTiny();
+  updateNow(queue[i]);
+  vidDuration = 0;                               // reset cache
+  timeLabel.textContent = '0:00 / …';            // placeholder
+  waitForDuration();                             // ← NEW (see helper below)
 }
 const skip=()=>{if(queue.length)playIdx((currentIdx+1)%queue.length);};
-
 /* ---------- UI ---------- */
 document.getElementById('addBtn').addEventListener('click',async()=>{
   const id=document.getElementById('videoId').value.trim();if(!id)return;
@@ -443,6 +448,18 @@ setInterval(() => {
         formatTime(cur) + ' / ' + formatTime(vidDuration);
 
 }, 1000);
+function waitForDuration () {
+  const probe = setInterval(() => {
+    const d = player.getDuration();
+    if (d) {
+      vidDuration = d;
+      timeLabel.textContent = '0:00 / ' + formatTime(d);
+      clearInterval(probe);                      // stop polling
+    }
+  }, 200);                                       // check every 0.2 s
+
+  setTimeout(() => clearInterval(probe), 4000);  // safety: quit after 4 s
+}
 qEl.addEventListener('click',e=>{
 const { del } = e.target.dataset;
 if (del) {
