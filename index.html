@@ -496,6 +496,75 @@ document.getElementById('importFile').addEventListener('change', function () {
   };
   r.readAsText(f); this.value = '';
 });
+/* ----------  search & add official audio ---------- */
+const YT_KEY = AIzaSyCtBUhn0t1AeiHivsdmw4ro5thw6R7Ijio;
+
+async function searchOfficialAudio (artist, song) {
+  // Build search string the way YouTube Music labels tracks
+  const q = `${song} "Provided to YouTube by" ${artist}`;
+  const url = `https://www.googleapis.com/youtube/v3/search?` +
+              new URLSearchParams({
+                key: YT_KEY,
+                part: 'snippet',
+                type: 'video',
+                maxResults: 10,
+                videoCategoryId: 10,      // 🎶 Music only
+                q
+              });
+
+  const r  = await fetch(url);
+  const j  = await r.json();
+  if (!j.items?.length) return null;
+
+  // 1) exact Topic-channel match
+  const topicRE = new RegExp(`^${artist}\\s*-\\s*Topic$`, 'i');
+  let hit = j.items.find(v => topicRE.test(v.snippet.channelTitle));
+
+  // 2) fallback: keep first result but verify description has the phrase
+  if (!hit) hit = j.items[0];
+  const vid = hit.id.videoId;
+
+  // optional second call to confirm “Provided to YouTube by”
+  const vr = await fetch(`https://www.googleapis.com/youtube/v3/videos?` +
+                         new URLSearchParams({
+                           key: YT_KEY,
+                           part: 'snippet',
+                           id: vid
+                         }));
+  const vd = await vr.json();
+  const good = vd.items?.[0]?.snippet?.description
+                 ?.toLowerCase().includes('provided to youtube by');
+
+  return good ? hit : null;
+}
+
+/* UI hook */
+document.getElementById('searchBtn').addEventListener('click', async () => {
+  const artist = document.getElementById('artistInput').value.trim();
+  const song   = document.getElementById('songInput').value.trim();
+  if (!artist || !song) { alert('Type both artist and song'); return; }
+
+  try {
+    const hit = await searchOfficialAudio(artist, song);
+    if (!hit) { alert('No official audio found 😕'); return; }
+
+    // Re-use your existing helpers so everything else “just works”
+    queue.unshift({                     // push to top
+      id     : hit.id.videoId,
+      title  : hit.snippet.title,
+      artist // same string the user typed
+    });
+    saveQueue();
+    renderQueue();
+    playIdx(0);
+    // tidy inputs
+    document.getElementById('artistInput').value = '';
+    document.getElementById('songInput').value   = '';
+  } catch (err) {
+    console.error(err);
+    alert('Search failed – check the console or your API quota');
+  }
+});
 
 /* ---------- init ---------- */
 (async () => {
