@@ -311,7 +311,7 @@ const nowBox    =document.getElementById('nowPlaying'),nowT=document.getElementB
 const playBtn   =document.getElementById('playPause');
 const prevBtn   =document.getElementById('prev');
 const timeLabel =document.getElementById('time');
-const progress   = document.getElementById('progress');   // ← NEW
+const progress  =document.getElementById('progress');   // ← NEW
 let   vidDuration = 0;                                    // ← NEW (cached total)
 /* ---------- persistence ---------- */
 const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
@@ -417,6 +417,13 @@ prevBtn.addEventListener('click', () => {
   if (!queue.length) return;
   const back = (currentIdx - 1 + queue.length) % queue.length;
   playIdx(back);
+});
+progress.addEventListener('input', function () {
+  if (!playerReady || !vidDuration) return;
+  const newTime = vidDuration * this.value / 100;
+  player.seekTo(newTime, true);
+  timeLabel.textContent =
+        formatTime(newTime) + ' / ' + formatTime(vidDuration);
 });
 const formatTime = s => {
   const m   = Math.floor(s / 60);
