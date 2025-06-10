@@ -388,11 +388,11 @@ document.getElementById('progress').addEventListener('input',function(){
 });
 
 qEl.addEventListener('click',e=>{
-+  const { del } = e.target.dataset;
-+  if (del) {
-+    queue.splice(del, 1);
-+    if (currentIdx >= del) currentIdx--;
-+  }
+const { del } = e.target.dataset;
+if (del) {
+queue.splice(del, 1);
+if (currentIdx >= del) currentIdx--;
+}
   else if(e.target.classList.contains('title')){
     playIdx([...qEl.children].indexOf(e.target.parentElement));return;
   } else return;
