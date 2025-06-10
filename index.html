@@ -262,11 +262,20 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   border-radius:50%;
   animation:spin .8s linear infinite;
 }
+#nowPlaying{margin-bottom:1.2rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <h1>Mattmusikspelaresajt 1.42</h1>
+
+<div id="nowPlaying">
+  <div id="videoWrap">
+    <div id="player" allow="autoplay; picture-in-picture"></div>
+    <div id="buffering" aria-hidden="true"></div>
+  </div>
+  <span id="nowTitle"></span>
+</div>
 
 <!-- ────── Search official audio ────── -->
 <div class="search-bar">
@@ -280,13 +289,7 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   <button id="addBtn">Add & Play</button>
 </div>
 
-<div id="nowPlaying">
-  <div id="videoWrap">
-    <div id="player" allow="autoplay; picture-in-picture"></div>
-    <div id="buffering" aria-hidden="true"></div>
-  </div>
-  <span id="nowTitle"></span>
-</div>
+
 
 <div class="controls">
   <button id="prev" title="Previous">⏮</button>
