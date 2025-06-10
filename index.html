@@ -625,11 +625,25 @@ if (mode === 'code'){
   const id = songBox.value.trim();     // ID pasted into "song" box
   if (!id) { alert('Paste a YouTube ID'); return; }
 
-  // quick add
-  queue.unshift({id,title:id,artist:''});
-  saveQueue(); renderQueue(); playIdx(0);
+if (mode === 'code'){
+  const id = songBox.value.trim();
+  if (!id) { alert('Paste a YouTube ID'); return; }
+
+  const info = await fetchVideoInfo(id);   // ← get title + artist
+
+  queue.unshift({
+    id,
+    title : info.title,
+    artist: info.artist
+  });
+
+  saveQueue();
+  renderQueue();
+  playIdx(0);
+
   songBox.value = '';
-  return;                               // ⬅️ skip the artist-title code
+  return;                                  
+}
 }
   const artist = document.getElementById('artistInput').value.trim();
   const song   = document.getElementById('songInput').value.trim();
