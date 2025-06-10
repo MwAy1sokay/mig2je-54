@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<div class="search-bar<html lang="en">
+<html lang="en">
 <head>
 <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <meta charset="UTF-8">
-<title>Mattmusikspelaresajt  1.42</title>
+<title>Mattmusikspelaresajt 1.42</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <!-- 🎵 google font for a bit of flair -->
@@ -24,287 +24,207 @@
   --gap: .65rem;
 }
 
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+  font-family:"Overpass",Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0 auto;
+  max-width:720px;
+  padding:1.25rem;
+  line-height:1.45;
 }
 
-body {
-  font-family: "Overpass", Arial, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  margin: 0 auto;
-  max-width: 720px;
-  padding: 1.25rem;
-  line-height: 1.45;
+h1{
+  text-align:center;
+  margin:0 0 1.3rem;
+  font-weight:600;
+  letter-spacing:.03em;
 }
 
-h1 {
-  text-align: center;
-  margin: 0 0 1.3rem;
-  font-weight: 600;
-  letter-spacing: .03em;
-}
-
-a,
-button,
-input,
-select {
-  font-family: inherit;
-  font-size: 1rem;
-  color: inherit;
+a,button,input,select{
+  font-family:inherit;
+  font-size:1rem;
+  color:inherit;
 }
 
 /* generic inputs */
 input[type="text"],
 input[type="range"],
-select {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text); /* ensure text is visible */
-  border-radius: 4px;
+select{
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:4px;
 }
 
 input[type="text"],
-select {
-  padding: .5rem .6rem;
+select{
+  padding:.5rem .6rem;
 }
 
-button {
-  padding: .5rem 1.35rem;
-  background: var(--accent);
-  border: none;
-  border-radius: 4px;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background .15s, transform .15s;
+button{
+  padding:.5rem 1.35rem;
+  background:var(--accent);
+  border:none;
+  border-radius:4px;
+  color:#fff;
+  cursor:pointer;
+  transition:background .15s,transform .15s;
 }
 
-button:disabled {
-  opacity: .35;
-  cursor: default;
-}
-
-button:not(:disabled):hover {
-  background: var(--accent-soft);
-}
-
-button:not(:disabled):active {
-  transform: scale(.97);
-}
+button:disabled{opacity:.35;cursor:default}
+button:not(:disabled):hover{background:var(--accent-soft)}
+button:not(:disabled):active{transform:scale(.97)}
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+select:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px
 }
 
 #nowPlaying{
-  display:flex;            /* already there but repeat for clarity   */
-  align-items:center;      /* vertical-centre both items             */
-  gap:.75rem;              /* space between art and title            */
-  flex-wrap:nowrap;        /* 🚫 forbid wrapping onto a new line      */
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  flex-wrap:nowrap
 }
 #nowTitle{
-  flex:1 1 auto;           /* take remaining width, shrink if needed */
+  flex:1 1 auto;
   white-space:nowrap;
   overflow:hidden;
-  text-overflow:ellipsis;
+  text-overflow:ellipsis
 }
 /* responsive video square */
 #videoWrap{
   flex:0 0 auto;
-  width:clamp(48px, 18vw, 80px);  /* 48-80px, ~18 % viewport on phones */
-  aspect-ratio:1 / 1;             /* keeps it square */
+  width:clamp(48px,18vw,80px);
+  aspect-ratio:1/1;
   border-radius:6px;
   overflow:hidden;
-  background:#000;
+  background:#000
 }
-#videoWrap #player{
-  width:100%; height:100%;
-  pointer-events:none;
+#videoWrap #player{width:100%;height:100%;pointer-events:none}
+
+.controls{
+  display:flex;
+  align-items:center;
+  gap:var(--gap);
+  flex-wrap:wrap;
+  margin-top:1.05rem
 }
-.controls {
-  display: flex;
-  align-items: center;
-  gap: var(--gap);
-  flex-wrap: wrap;
-  margin-top: 1.05rem;
+.controls button{flex:0 0 auto}
+
+#progress{
+  flex:1 1 100%;
+  margin-top:.45rem;
+  height:7px;
+  appearance:none;
+  background:var(--border);
+  border-radius:4px
+}
+#progress::-webkit-slider-thumb{
+  appearance:none;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--accent);
+  border:0;
+  cursor:pointer;
+  margin-top:-3.5px
 }
 
-.controls button {
-  flex: 0 0 auto;
+h2{margin:1.6rem 0 .7rem}
+
+#queueWrap{
+  max-height:50vh;
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--panel)
 }
 
-#progress {
-  flex: 1 1 100%;
-  margin-top: .45rem;
-  height: 7px;
-  appearance: none;
-  background: var(--border);
-  border-radius: 4px;
+#queue li{
+  display:flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.55rem .65rem;
+  border-bottom:1px solid var(--border);
+  transition:background .15s
+}
+#queue li:last-child{border-bottom:none}
+#queue li span.title{flex:1;cursor:pointer;user-select:none}
+#queue li:hover{background:#181818}
+#queue li button{padding:.25rem .7rem}
+
+.playlist-controls{
+  margin-top:1.8rem;
+  padding:1rem;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--panel)
+}
+.playlist-controls h3{margin:0 0 .8rem;font-weight:600}
+.playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
+.playlist-controls input[type="file"]{display:none}
+
+@media(max-width:600px){
+  .controls button{flex:1 1 46%}
+  #progress{flex:1 1 100%}
+  #queue li button{padding:.3rem .75rem}
 }
 
-#progress::-webkit-slider-thumb {
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 0;
-  cursor: pointer;
-  margin-top: -3.5px;
+/* ensure dark theme everywhere */
+input[type="text"],select{
+  background-color:var(--panel)!important;
+  color:var(--text)!important;
+  border:1px solid var(--border);
+  border-radius:4px
 }
-
-h2 {
-  margin: 1.6rem 0 .7rem;
+input:-webkit-autofill{
+  background-color:var(--panel)!important;
+  color:var(--text)!important;
+  box-shadow:0 0 0 1000px var(--panel) inset!important;
+  -webkit-text-fill-color:var(--text)!important
 }
-
-#queueWrap {
-  max-height: 50vh;
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel);
-}
-
-#queue li {
-  display: flex;
-  align-items: center;
-  gap: .45rem;
-  padding: .55rem .65rem;
-  border-bottom: 1px solid var(--border);
-  transition: background .15s;
-}
-
-#queue li:last-child {
-  border-bottom: none;
-}
-
-#queue li span.title {
-  flex: 1;
-  cursor: pointer;
-  user-select: none;
-}
-
-#queue li:hover {
-  background: #181818;
-}
-
-#queue li button {
-  padding: .25rem .7rem;
-}
-
-.playlist-controls {
-  margin-top: 1.8rem;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel);
-}
-
-.playlist-controls h3 {
-  margin: 0 0 .8rem;
-  font-weight: 600;
-}
-
-.playlist-controls button,
-label {
-  margin-top: .5rem;
-  margin-right: .7rem;
-}
-
-.playlist-controls input[type="file"] {
-  display: none;
-}
-
-@media (max-width: 600px) {
-  .controls button {
-    flex: 1 1 46%;
-  }
-
-  #progress {
-    flex: 1 1 100%;
-  }
-
-  #queue li button {
-    padding: .3rem .75rem;
-  }
-}
-input[type="text"], select {
-  background-color: var(--panel) !important;
-  color: var(--text) !important;
-  padding: .5rem .6rem;
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-input:-webkit-autofill {
-  background-color: var(--panel) !important;
-  color: var(--text) !important;
-  box-shadow: 0 0 0px 1000px var(--panel) inset !important;
-  -webkit-text-fill-color: var(--text) !important;
-}
-input[type="text"],
 input#videoId,
-input#playlistName {
-  background-color: var(--panel) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: .5rem .6rem;
-  width: 100%;
-}
-input:-webkit-autofill,
-input:-webkit-autofill:focus {
-  box-shadow: 0 0 0px 1000px var(--panel) inset !important;
-  -webkit-text-fill-color: var(--text) !important;
-  color: var(--text) !important;
-  background-color: var(--panel) !important;
-}
-#addBtn{
-  margin-bottom:1rem;        
+input#playlistName{
+  width:100%
 }
 
-#nowTitle{
-  flex:1 1 auto;
-  font-size:1.15rem;         
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+/* layout tweaks for the two horizontal bars */
+.search-bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--gap)
 }
+.search-bar input{
+  flex:1 1 12rem;
+  width:auto   /* override any 100% */
+}
+.search-bar button{flex:0 0 auto}
 
-#nowTitle small{
-  font-size:.9em;        /* a bit smaller */
-  opacity:.7;            /* lighter grey */
-}
-.search-bar input {
-  flex: 1 1 12rem;   /* grow but don’t insist on 100 % */
-  width: auto;       /* override the 100 % from the generic rule */
-}
-.search-bar button {
-  flex: 0 0 auto;    /* keep button at its natural size */
-}
-.search-bar input {
-  width: auto;          /* override the 100 % */
-  flex: 1 1 12rem;      /* let them grow and wrap */
-}
+#addBtn{margin-bottom:1rem}
+
+#nowTitle{font-size:1.15rem}
+#nowTitle small{font-size:.9em;opacity:.7}
 </style>
 </head>
 <body>
-<h1>Mattmusikspelaresajt  1.42</h1>
+<h1>Mattmusikspelaresajt 1.42</h1>
 
 <!-- ────── Search official audio ────── -->
 <div class="search-bar">
-  <input id="artistInput"  placeholder="Artist name">
-  <input id="songInput"    placeholder="Song title">
+  <input id="artistInput" type="text" placeholder="Artist name">
+  <input id="songInput"   type="text" placeholder="Song title">
   <button id="searchBtn">Search & Play</button>
 </div>
 
 <div class="search-bar">
-<input id="videoId" placeholder="YouTube video ID">
-<button id="addBtn">Add &amp; Play</button>
+  <input id="videoId" type="text" placeholder="YouTube video ID">
+  <button id="addBtn">Add & Play</button>
 </div>
 
 <div id="nowPlaying">
