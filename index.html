@@ -204,7 +204,11 @@ input#playlistName{
   flex:1 1 12rem;
   width:auto   /* override any 100% */
 }
-.search-bar button{flex:0 0 auto}
+.search-bar button{flex:0 0 auto
+}
+.search-bar + .search-bar{
+  margin-top: var(--gap);   /* ≈0.65 rem – adjust if you want more/less */
+}
 
 #addBtn{margin-bottom:1rem}
 
