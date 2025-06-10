@@ -107,7 +107,7 @@ select:focus-visible{
   overflow:hidden;
   background:#000
 }
-#videoWrap #player{width:100%;height:100%;pointer-events:none}
+#videoWrap #player{width:1px;height:1px;pointer-events:none}
 
 .controls{
   display:flex;
@@ -272,9 +272,10 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 
 <div id="nowPlaying">
   <div id="videoWrap">
-    <div id="player" allow="autoplay; picture-in-picture"></div>
-    <div id="buffering" aria-hidden="true"></div>
-  </div>
+  <div id="player" allow="autoplay"></div>
+  <img id="art" alt="" style="width:100%;height:auto;border-radius:6px">
+  <div id="buffering" aria-hidden="true"></div>
+</div>
   <span id="nowTitle"></span>
 </div>
 <div class="controls">
@@ -334,6 +335,7 @@ const prevBtn   =document.getElementById('prev');
 const timeLabel =document.getElementById('time');
 const progress  =document.getElementById('progress');
 const buffering =document.getElementById('buffering');
+const art       =document.getElementById('art');    
 let   vidDuration = 0; 
 
 /* ---------- persistence ---------- */
@@ -417,8 +419,11 @@ const updateNow = it => {
     nowBox.style.display = 'none';
     return;
   }
-  nowT.innerHTML = it.title + (it.artist ? ` <small>— ${it.artist}</small>` : '');
-  nowBox.style.display = 'flex';        // <— use flex, not block
+  art.src = `https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/hqdefault.jpg`;
+
+  nowT.innerHTML = it.title +
+                   (it.artist ? ` <small>— ${it.artist}</small>` : '');
+  nowBox.style.display = 'flex';
 };
 /* ---------- playback ---------- */
 function playIdx (i) {
