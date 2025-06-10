@@ -481,16 +481,20 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     const hit = await searchOfficialAudio(artist, song);
     if (!hit) { alert('No official audio found 😕'); return; }
 
-    // Re-use your existing helpers so everything else “just works”
-    queue.unshift({                     // push to top
-      id     : hit.id.videoId,
-      title  : hit.snippet.title,
-      artist // same string the user typed
+    // ── NEW: derive canonical artist name ─────────────────────────
+    const chanTitle   = hit.snippet.channelTitle || artist;
+    const cleanArtist = chanTitle.replace(/\s*-\s*Topic\s*$/i, '').trim();
+
+    queue.unshift({
+      id:    hit.id.videoId,
+      title: hit.snippet.title,
+      artist: cleanArtist       // use the cleaned-up value
     });
+    // ──────────────────────────────────────────────────────────────
+
     saveQueue();
     renderQueue();
     playIdx(0);
-    // tidy inputs
     document.getElementById('artistInput').value = '';
     document.getElementById('songInput').value   = '';
   } catch (err) {
