@@ -9,287 +9,111 @@
 <meta charset="UTF-8">
 <title>Mattmusikspelaresajt 1.42</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
-<!-- 🎵 google font for a bit of flair -->
 <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --bg: #000;
-  --panel: #111;
-  --border: #333;
-  --text: #fffcfc;
-  --accent: #00877c;
-  --accent-soft: #00cfbe;
-  --gap: .65rem;
+/* ─── Theme variables ───────────────────────────────────────────── */
+:root{
+  --bg:#000;--panel:#111;--border:#333;--text:#fffcfc;
+  --accent:#00877c;--accent-soft:#00cfbe;--gap:.65rem;
 }
-
+/* ─── Basic reset / layout ──────────────────────────────────────── */
 *{box-sizing:border-box}
-
 body{
-  font-family:"Overpass",Arial,Helvetica,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  margin:0 auto;
-  max-width:720px;
-  padding:1.25rem;
-  line-height:1.45;
+  margin:0 auto;max-width:720px;padding:1.25rem;
+  background:var(--bg);color:var(--text);
+  font:400 1rem/1.45 "Overpass",Arial,Helvetica,sans-serif;
 }
+h1{margin:0 0 1.3rem;text-align:center;font-weight:600;letter-spacing:.03em}
+a,button,input,select{font:inherit;color:inherit}
 
-h1{
-  text-align:center;
-  margin:0 0 1.3rem;
-  font-weight:600;
-  letter-spacing:.03em;
-}
-
-a,button,input,select{
-  font-family:inherit;
-  font-size:1rem;
-  color:inherit;
-}
-
-/* generic inputs */
-input[type="text"],
-input[type="range"],
-select{
-  background:var(--panel);
-  border:1px solid var(--border);
-  color:var(--text);
+/* ─── Inputs & buttons ──────────────────────────────────────────── */
+input[type=text],input[type=range],select{
+  background:var(--panel);border:1px solid var(--border);color:var(--text);
   border-radius:4px;
 }
-
-input[type="text"],
-select{
-  padding:.5rem .6rem;
-}
-
+input[type=text],select{padding:.5rem .6rem}
 button{
-  padding:.5rem 1.35rem;
-  background:var(--accent);
-  border:none;
-  border-radius:4px;
-  color:#fff;
-  cursor:pointer;
-  transition:background .15s,transform .15s;
+  padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;
+  background:var(--accent);color:#fff;transition:background .15s,transform .15s;
 }
-
 button:disabled{opacity:.35;cursor:default}
 button:not(:disabled):hover{background:var(--accent-soft)}
 button:not(:disabled):active{transform:scale(.97)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible{
-  outline:2px solid var(--accent);
-  outline-offset:2px
-}
+/* ─── Top “now playing” area ────────────────────────────────────── */
+#nowPlaying{display:flex;align-items:center;gap:.75rem;flex-wrap:nowrap}
+#nowTitle{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nowTitle small{font-size:.9em;opacity:.7}
 
-#nowPlaying{
-  display:flex;
-  align-items:center;
-  gap:.75rem;
-  flex-wrap:nowrap
+/* square artwork wrapper */
+#videoWrap{
+  position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1/1;
+  border-radius:6px;overflow:hidden;background:#000;
 }
-#nowTitle{
-  flex:1 1 auto;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
+#videoWrap #player{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+#art{
+  width:100%;height:100%;object-fit:cover;object-position:center;
+  border-radius:6px;opacity:0;transition:opacity .4s;
 }
-#videoWrap #player{
-  position:absolute;   /* take it out of normal flow */
-  top:0; left:0;
-  width:1px; height:1px;   /* practically invisible */
-  opacity:0;               /* no red rectangle */
-  pointer-events:none;
-}
+#art[src]{opacity:1}
 
+/* buffering spinner */
+#buffering{position:absolute;inset:0;display:none;place-content:center;
+           backdrop-filter:blur(2px)}
+#buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;
+                  border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Main controls ─────────────────────────────────────────────── */
 .controls{
-  display:flex;
-  align-items:center;
-  gap:var(--gap);
-  flex-wrap:wrap;
-
-  margin-top:1.05rem;
-  margin-bottom:var(--gap);           /* space before the search bars */
+  display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;
+  margin:1.05rem 0 var(--gap);
 }
+.controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;
+  appearance:none;background:var(--border);border-radius:4px}
+.controls input[type=range]::-webkit-slider-thumb{
+  appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:0;margin-top:-3.5px;cursor:pointer}
+#time{font-variant-numeric:tabular-nums;opacity:.8}
 
-.search-mode{display:flex;gap:.8rem;align-items:center}
-
-.hidden{display:none}
-
-#time{
-  font-variant-numeric:tabular-nums;
-  opacity:.8;
-}
+/* ── mobile: square icon buttons ── */
 @media(max-width:600px){
   #time{flex:1 1 100%;text-align:left;margin-top:.25rem}
-}
-#progress{
-  flex:1 1 100%;
-  margin-top:.45rem;
-  height:7px;
-  appearance:none;
-  background:var(--border);
-  border-radius:4px
-}
-#progress::-webkit-slider-thumb{
-  appearance:none;
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  background:var(--accent);
-  border:0;
-  cursor:pointer;
-  margin-top:-3.5px
+  .controls button{width:48px;height:48px;padding:0;font-size:1.25rem;flex:0 0 auto}
 }
 
-h2{margin:1.6rem 0 .7rem}
+/* ─── Search bars & mode toggle ─────────────────────────────────── */
+.search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
+.search-bar input{flex:1 1 12rem;width:auto}
+.search-bar+.search-bar{margin-top:var(--gap)}
+.search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
+.hidden{display:none}
 
-#art{
-  display:block;        /* removes small inline gap */
-  width:100%;
-  height:100%;          /* match the square wrapper */
-  object-fit:cover;     /* fill & crop */
-  object-position:center;
-
-  border-radius:6px;    /* keep your rounded corners */
-  transition:opacity .4s;
-  opacity:0;
-}
-#art[src]{opacity:1}    /* fade in when src set */
-
-#queueWrap{
-  max-height:50vh;
-  overflow:auto;
-  border:1px solid var(--border);
-  border-radius:6px;
-  background:var(--panel)
-}
-
+/* ─── Queue list ────────────────────────────────────────────────── */
+#queueWrap{max-height:50vh;overflow:auto;background:var(--panel);
+           border:1px solid var(--border);border-radius:6px}
 #queue li{
-  display:flex;
-  align-items:center;
-  gap:.45rem;
-  padding:.55rem .65rem;
-  border-bottom:1px solid var(--border);
-  transition:background .15s
-}
+  display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;
+  border-bottom:1px solid var(--border);transition:background .15s}
 #queue li:last-child{border-bottom:none}
-#queue li span.title{flex:1;cursor:pointer;user-select:none}
 #queue li:hover{background:#181818}
-#queue li button{padding:.25rem .7rem}
+#queue li span.title{flex:1;cursor:pointer;user-select:none}
 #queue li img.thumb{
-  width:48px;               /* ⬅️  choose any size you like */
-  height:48px;              /*    keep the same to stay square  */
-  flex:0 0 auto;
-  object-fit:cover;         /* crop left & right, keep centre  */
-  object-position:center;
-  border-radius:4px;        /* (optional) rounded corners      */
-}
+  width:48px;height:48px;flex:0 0 auto;object-fit:cover;object-position:center;
+  border-radius:4px}
+.drag-handle{cursor:grab;font-size:1.1rem;line-height:1;padding:0 .25rem;opacity:.7}
+li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1}
+#queue li button{padding:.25rem .7rem}
 
-
+/* ─── Playlist controls ─────────────────────────────────────────── */
 .playlist-controls{
-  margin-top:1.8rem;
-  padding:1rem;
-  border:1px solid var(--border);
-  border-radius:6px;
-  background:var(--panel)
-}
+  margin-top:1.8rem;padding:1rem;background:var(--panel);
+  border:1px solid var(--border);border-radius:6px}
 .playlist-controls h3{margin:0 0 .8rem;font-weight:600}
 .playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
-.playlist-controls input[type="file"]{display:none}
-
-@media(max-width:600px){
-  #progress{flex:1 1 100%}
-  #queue li button{padding:.3rem .75rem}
-}
-
-/* ensure dark theme everywhere */
-input[type="text"],select{
-  background-color:var(--panel)!important;
-  color:var(--text)!important;
-  border:1px solid var(--border);
-  border-radius:4px
-}
-#videoWrap{
-  position:relative;                  /* keeps #player + #buffering stacked */
-  width: clamp(100px, 28vw, 100px);
-  aspect-ratio:1/1;                   /* perfect square */
-  border-radius:6px;
-  overflow:hidden;                    /* crop the artwork */
-  background:#000;                    /* fallback while loading */
-}
-input:-webkit-autofill{
-  background-color:var(--panel)!important;
-  color:var(--text)!important;
-  box-shadow:0 0 0 1000px var(--panel) inset!important;
-  -webkit-text-fill-color:var(--text)!important
-}
-input#videoId,
-input#playlistName{
-  width:100%
-}
-
-/* layout tweaks for the two horizontal bars */
-.search-bar{
-  display:flex;
-  flex-wrap:wrap;
-  gap:var(--gap)
-}
-.search-bar input{
-  flex:1 1 12rem;
-  width:auto   /* override any 100% */
-}
-.search-bar button{flex:0 0 auto
-}
-.search-bar + .search-bar{
-  margin-top: var(--gap);   /* ≈0.65 rem – adjust if you want more/less */
-}
-.drag-handle{
-  cursor:grab;
-  font-size:1.1rem;
-  line-height:1;
-  padding:0 .25rem;
-  user-select:none;
-  opacity:.7;
-}
-li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
-
-#addBtn{margin-bottom:1rem}
-
-#nowTitle{font-size:1.15rem}
-
-#nowTitle small{font-size:.9em;opacity:.7}
-@media (max-width:600px){
-  .controls button{
-    flex:0 0 auto;
-    width:48px;
-    height:48px;
-    padding:0;
-    font-size:1.25rem;
-  }
-}
-/* buffering overlay */
-#buffering{
-  position:absolute;
-  inset:0;
-  display:none;
-  place-content:center;
-  backdrop-filter:blur(2px);
-}
-
-/* simple ring spinner */
-#buffering::after{
-  content:'';
-  width:32px;height:32px;
-  border:4px solid #fff3;
-  border-top-color:#fff;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
+.playlist-controls input[type=file]{display:none}
 </style>
 </head>
 <body>
