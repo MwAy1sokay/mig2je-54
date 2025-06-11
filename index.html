@@ -165,12 +165,37 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 /* ---------- state ---------- */
+const $ = id => document.getElementById(id);
+
+/* one place to cache every element we touch */
+const ui = {
+  // search / mode
+  artist     : $('artistInput'),
+  song       : $('songInput'),
+  modeRadios : document.querySelectorAll('input[name="mode"]'),
+
+  // now-playing
+  nowBox     : $('nowPlaying'),
+  nowTitle   : $('nowTitle'),
+  art        : $('art'),
+  playerBox  : $('player'),
+  buffering  : $('buffering'),
+
+  // main controls
+  playBtn    : $('playPause'),
+  prevBtn    : $('prev'),
+  skipBtn    : $('skip'),
+  timeLbl    : $('time'),
+  slider     : $('progress'),
+
+  // queue & playlists
+  queueUL    : $('queue'),
+  listSel    : $('playlistSelect')
+};
 let queue=[],currentIdx=-1;
 let player,playerReady=false,pendingPlay=null;
 
-const artistBox = document.getElementById('artistInput');
-const songBox   = document.getElementById('songInput');
-const modeRadios = document.querySelectorAll('input[name="mode"]');
+
 
 modeRadios.forEach(r => r.addEventListener('change', () => {
   const codeMode = document.querySelector('input[name="mode"]:checked').value === 'code';
@@ -178,8 +203,7 @@ modeRadios.forEach(r => r.addEventListener('change', () => {
   songBox.placeholder = codeMode ? 'YouTube video ID' : 'Song title';
 }));
 
-const qEl=document.getElementById('queue');
-new Sortable(qEl,{
+new Sortable(ui.queueUL,{
   handle: '.drag-handle',
   animation:150,
   onEnd: e => {
@@ -187,13 +211,6 @@ new Sortable(qEl,{
     saveQueue();
   }
 });
-const nowBox    =document.getElementById('nowPlaying'),nowT=document.getElementById('nowTitle');
-const playBtn   =document.getElementById('playPause');
-const prevBtn   =document.getElementById('prev');
-const timeLabel =document.getElementById('time');
-const progress  =document.getElementById('progress');
-const buffering =document.getElementById('buffering');
-const art       =document.getElementById('art');    
 let   vidDuration = 0; 
 
 /* ---------- persistence ---------- */
