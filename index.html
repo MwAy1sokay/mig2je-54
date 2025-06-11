@@ -114,16 +114,11 @@ select:focus-visible{
   margin-top:1.05rem;
   margin-bottom:var(--gap);           /* space before the search bars */
 }
-.controls button{flex:0 0 auto}
 
 .search-mode{display:flex;gap:.8rem;align-items:center}
 
 .hidden{display:none}
 
-.controls button{
-  padding:.25rem .6rem;
-  font-size:1.2rem;
-}
 #time{
   font-variant-numeric:tabular-nums;
   opacity:.8;
@@ -207,7 +202,6 @@ h2{margin:1.6rem 0 .7rem}
 .playlist-controls input[type="file"]{display:none}
 
 @media(max-width:600px){
-  .controls button{flex:1 1 46%}
   #progress{flex:1 1 100%}
   #queue li button{padding:.3rem .75rem}
 }
@@ -266,12 +260,15 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 #addBtn{margin-bottom:1rem}
 
 #nowTitle{font-size:1.15rem}
+
 #nowTitle small{font-size:.9em;opacity:.7}
-@media(max-width: 600px) {
-  .controls button {
-    width: 50px;
-    height: 50px;
-    padding: 0;
+@media (max-width:600px){
+  .controls button{
+    flex:0 0 auto;
+    width:48px;
+    height:48px;
+    padding:0;
+    font-size:1.25rem;
   }
 }
 /* buffering overlay */
