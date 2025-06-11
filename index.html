@@ -207,7 +207,7 @@ const LS='playlists',sel=document.getElementById('playlistSelect');
 const getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}');
 const setLists=o=>localStorage.setItem(LS,JSON.stringify(o));
 const refreshSel=()=>{sel.innerHTML='<option value="">— Load playlist —</option>';
-  Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',<option>${n}</option>));};
+  Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`));};
 /* ---------- YouTube ---------- */
 function onYouTubeIframeAPIReady(){
   player=new YT.Player('player',{
@@ -230,7 +230,7 @@ const setTiny=()=>{try{player.setPlaybackQuality('tiny');}catch{}};
 /* fetch {title, artist} via noembed */
 const fetchVideoInfo = async id => {
   try {
-    const r = await fetch(https://noembed.com/embed?url=https://youtu.be/${id});
+    const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
     const j = await r.json();
     const rawArtist = j.author_name || '';               // e.g. "Imagine Dragons – Topic"
     const artist = rawArtist.replace(/\s*[–-]\s*Topic\s*$/i, ''); // strip dash+Topic
@@ -259,17 +259,17 @@ async function backfillArtists () {
 /* ---------- DragHandle ---------- */
 const renderQueue = () => {
   qEl.innerHTML = '';
-  queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend', 
+  queue.forEach((it,i) => qEl.insertAdjacentHTML('beforeend', `
     <li contextmenu="ctx" data-id="${it.id}">
       <span class="drag-handle" aria-hidden="true">≡</span>
       <img class="thumb" loading="lazy"
            src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
       <span class="title">
         ${it.title || it.id}
-        ${it.artist ? <small style="opacity:.7"> — ${it.artist}</small> : ''}
+        ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
       </span>
       <button data-del="${i}">✕</button>
-    </li>));
+    </li>`));
 };
 /* ---------- helpers ---------- */
 const updateNow = it => {
@@ -277,10 +277,10 @@ const updateNow = it => {
     nowBox.style.display = 'none';
     return;
   }
-  art.src = https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg;
+  art.src = `https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg`;
 
   nowT.innerHTML = it.title +
-                   (it.artist ?  <small>— ${it.artist}</small> : '');
+                   (it.artist ? ` <small>— ${it.artist}</small>` : '');
   nowBox.style.display = 'flex';
 };
 /* ---------- playback ---------- */
@@ -408,8 +408,8 @@ const YT_KEY = 'AIzaSyCtBUhn0t1AeiHivsdmw4ro5thw6R7Ijio';
 
 async function searchOfficialAudio (artist, song) {
   // Build search string the way YouTube Music labels tracks
-  const q = ${song} "Provided to YouTube by" ${artist};
-  const url = https://www.googleapis.com/youtube/v3/search? +
+  const q = `${song} "Provided to YouTube by" ${artist}`;
+  const url = `https://www.googleapis.com/youtube/v3/search?` +
               new URLSearchParams({
                 key: YT_KEY,
                 part: 'snippet',
@@ -424,7 +424,7 @@ async function searchOfficialAudio (artist, song) {
   if (!j.items?.length) return null;
 
   // 1) exact Topic-channel match
-  const topicRE = new RegExp(^${artist}\\s*-\\s*Topic$, 'i');
+  const topicRE = new RegExp(`^${artist}\\s*-\\s*Topic$`, 'i');
   let hit = j.items.find(v => topicRE.test(v.snippet.channelTitle));
 
   // 2) fallback: keep first result but verify description has the phrase
@@ -432,7 +432,7 @@ async function searchOfficialAudio (artist, song) {
   const vid = hit.id.videoId;
 
   // optional second call to confirm “Provided to YouTube by”
-  const vr = await fetch(https://www.googleapis.com/youtube/v3/videos? +
+  const vr = await fetch(`https://www.googleapis.com/youtube/v3/videos?` +
                          new URLSearchParams({
                            key: YT_KEY,
                            part: 'snippet',
