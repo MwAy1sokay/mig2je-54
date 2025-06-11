@@ -1,59 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mattmusikspelaresajt 1.44</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Favicons / manifest omitted for brevity -->
-  <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    :root{--bg:#000;--panel:#111;--border:#333;--text:#fffcfc;
-          --accent:#00877c;--accent-soft:#00cfbe;--gap:.65rem}
-    *{box-sizing:border-box}
-    body{margin:0 auto;max-width:720px;padding:1.25rem;background:var(--bg);
-         color:var(--text);font:400 1rem/1.45 "Overpass",Arial,sans-serif}
-    h1{margin:0 0 1.3rem;text-align:center;font-weight:600;letter-spacing:.03em}
-    a,button,input,select{font:inherit;color:inherit}
-    input[type=text],input[type=range],select{background:var(--panel);border:1px solid var(--border);
-         color:var(--text);border-radius:4px}
-    input[type=text],select{padding:.5rem .6rem}
-    button{padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;
-           background:var(--accent);color:#fff;transition:background .15s,transform .15s}
-    button:not(:disabled):hover{background:var(--accent-soft)}
-    button:not(:disabled):active{transform:scale(.97)}
-    :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-    #nowPlaying{display:flex;align-items:center;gap:.75rem}
-    #nowTitle{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #videoWrap{position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1;border-radius:6px;
-               overflow:hidden;background:#000}
-    #videoWrap #player{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-    #art{width:100%;height:100%;object-fit:cover;border-radius:6px;opacity:0;transition:opacity .4s}
-    #art[src]{opacity:1}
-    #buffering{position:absolute;inset:0;display:none;place-content:center;backdrop-filter:blur(2px)}
-    #buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;border-top-color:#fff;
-                      border-radius:50%;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .controls{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;margin:1.05rem 0 var(--gap)}
-    .controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;appearance:none;
-                                background:var(--border);border-radius:4px}
-    .controls input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;
-                                border-radius:50%;background:var(--accent);border:0;margin-top:-3.5px}
-    #time{font-variant-numeric:tabular-nums;opacity:.8}
-    @media(max-width:600px){#time{flex:1 1 100%;text-align:left;margin-top:.25rem}
-                            .controls button{width:48px;height:48px;padding:0;font-size:1.25rem}}
-    .search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
-    .search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
-    #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);
-               border-radius:6px}
-    #queue li{display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;border-bottom:1px solid var(--border)}
-    #queue li:hover{background:#181818}
-    .drag-handle{cursor:grab;font-size:1.1rem;padding:0 .25rem;opacity:.7}
-    .playlist-controls{margin-top:1.8rem;padding:1rem;background:var(--panel);border:1px solid var(--border);
-                       border-radius:6px}
-  </style>
+<meta charset="UTF-8">
+<title>Mattmusikspelaresajt 1.45</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--panel:#111;--border:#333;--text:#fffcfc;
+      --accent:#00877c;--accent-soft:#00cfbe;--gap:.65rem}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:720px;padding:1.25rem;background:var(--bg);
+     color:var(--text);font:400 1rem/1.45 "Overpass",Arial,sans-serif}
+h1{margin:0 0 1.3rem;text-align:center;font-weight:600;letter-spacing:.03em}
+a,button,input,select{font:inherit;color:inherit}
+
+input[type=text],input[type=range],select{background:var(--panel);
+      border:1px solid var(--border);color:var(--text);border-radius:4px}
+input[type=text],select{padding:.5rem .6rem}
+button{padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;
+       background:var(--accent);color:#fff;transition:background .15s,transform .15s}
+button:not(:disabled):hover{background:var(--accent-soft)}
+button:not(:disabled):active{transform:scale(.97)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+#nowPlaying{display:flex;align-items:center;gap:.75rem}
+#nowTitle{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#videoWrap{position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1;border-radius:6px;
+           overflow:hidden;background:#000}
+#videoWrap #player{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+#art{width:100%;height:100%;object-fit:cover;border-radius:6px;opacity:0;transition:opacity .4s}
+#art[src]{opacity:1}
+#buffering{position:absolute;inset:0;display:none;place-content:center;backdrop-filter:blur(2px)}
+#buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;border-top-color:#fff;
+                  border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.controls{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;margin:1.05rem 0 var(--gap)}
+.controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;appearance:none;
+                            background:var(--border);border-radius:4px}
+.controls input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;
+                            border-radius:50%;background:var(--accent);border:0;margin-top:-3.5px}
+#time{font-variant-numeric:tabular-nums;opacity:.8}
+@media(max-width:600px){#time{flex:1 1 100%;text-align:left;margin-top:.25rem}
+                        .controls button{width:48px;height:48px;padding:0;font-size:1.25rem}}
+
+.search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
+.search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
+.hidden{display:none}
+
+#queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);
+           border-radius:6px}
+#queue li{display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;
+          border-bottom:1px solid var(--border)}
+#queue li:hover{background:#181818}
+#queue li img.thumb{width:48px;height:48px;flex:0 0 auto;object-fit:cover;object-position:center;
+                    border-radius:4px}
+#queue li span.title{flex:1;cursor:pointer;user-select:none}
+.drag-handle{cursor:grab;font-size:1.1rem;padding:0 .25rem;opacity:.7}
+
+.playlist-controls{margin-top:1.8rem;padding:1rem;background:var(--panel);
+                   border:1px solid var(--border);border-radius:6px}
+.playlist-controls h3{margin:0 0 .8rem;font-weight:600}
+.playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
+.playlist-controls input[type=file]{display:none}
+</style>
 </head>
 <body>
-<h1>Mattmusikspelaresajt 1.44</h1>
+<h1>Mattmusikspelaresajt 1.45</h1>
 
 <!-- now-playing -->
 <div id="nowPlaying">
@@ -65,7 +78,7 @@
   <span id="nowTitle"></span>
 </div>
 
-<!-- controls -->
+<!-- transport -->
 <div class="controls">
   <button id="prev">⏮</button><button id="playPause">▶</button>
   <button id="skip">⏭</button><span id="time" style="min-width:5.5rem">0:00 / 0:00</span>
@@ -105,10 +118,12 @@ const ui={artist:$('artistInput'),song:$('songInput'),
   modeRadios:document.querySelectorAll('input[name="mode"]'),
   nowBox:$('nowPlaying'),nowTitle:$('nowTitle'),art:$('art'),buffering:$('buffering'),
   playBtn:$('playPause'),prevBtn:$('prev'),skipBtn:$('skip'),
-  timeLbl:$('time'),slider:$('progress'),queueUL:$('queue'),listSel:$('playlistSelect')};
-const {artist:artistBox,song:songBox,modeRadios,nowBox,nowTitle:nowT,art,buffering,
-       playBtn,prevBtn,skipBtn,timeLbl:timeLabel,slider:progress,queueUL:qEl,listSel:sel}=ui;
-progress.step='any';                     /* ← smooth thumb */
+  timeLbl:$('time'),slider:$('progress'),
+  queueUL:$('queue'),listSel:$('playlistSelect')};
+const {artist:artistBox,song:songBox,modeRadios,nowBox,
+       nowTitle:nowT,art,buffering,playBtn,prevBtn,skipBtn,
+       timeLbl:timeLabel,slider:progress,queueUL:qEl,listSel:sel}=ui;
+progress.step='any';                         /* smooth thumb */
 
 /* === state === */
 let queue=[],currentIdx=-1,player,playerReady=false,pendingPlay=null,vidDuration=0;
@@ -128,8 +143,8 @@ new Sortable(qEl,{handle:'.drag-handle',animation:150,onEnd:e=>{
 /* === persistence === */
 const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
                      queue=m?JSON.parse(decodeURIComponent(m[1])):[]};
-const saveQueue=()=>document.cookie='queue='+encodeURIComponent(JSON.stringify(queue))
-                    +';max-age=31536000;path=/';
+const saveQueue=()=>document.cookie='queue='+encodeURIComponent(JSON.stringify(queue))+
+                    ';max-age=31536000;path=/';
 
 /* playlists */
 const LS='playlists',getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}'),
@@ -137,34 +152,32 @@ const LS='playlists',getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}'),
       refreshSel=()=>{sel.innerHTML='<option value=\"\">— Load —</option>';
         Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`))};
 
-/* === YouTube IFrame API === */
+/* === YouTube API === */
 function onYouTubeIframeAPIReady(){
   player=new YT.Player('player',{
     playerVars:{controls:0,playsinline:1},
     events:{
-      onReady:()=>{playerReady=true;setTiny();
+      onReady:()=>{
+        playerReady=true;try{player.setPlaybackQuality('tiny')}catch{}
         if(pendingPlay!==null){playIdx(pendingPlay);pendingPlay=null;}
-        startProgressLoop();},
+        startProgressLoop();
+      },
       onStateChange:e=>{
         if(e.data===0) skip();
         playBtn.textContent=e.data===1?'⏸':'▶';
         buffering.style.display=e.data===3?'grid':'none';
       }}});}
-const setTiny=()=>{try{player.setPlaybackQuality('tiny')}catch{}};
 
-/* === video info === */
+/* === helpers === */
 const fetchVideoInfo=async id=>{
   try{const j=await(await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`)).json();
       return{title:j.title||id,artist:(j.author_name||'').replace(/\\s*[–-]\\s*Topic\\s*$/i,'')};}
   catch{return{title:id,artist:''}}};
-
-/* === renderers === */
-const renderQueue=()=>{qEl.innerHTML='';
-  queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
-    <li data-id=\"${it.id}\"><span class=\"drag-handle\">≡</span>
-      <img class=\"thumb\" src=\"https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg\" alt=\"\">
-      <span class=\"title\">${it.title}${it.artist?` <small style=\"opacity:.7\">— ${it.artist}</small>`:''}</span>
-      <button data-del=\"${i}\">✕</button></li>`));};
+const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
+  <li data-id=\"${it.id}\"><span class=\"drag-handle\">≡</span>
+    <img class=\"thumb\" src=\"https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg\" alt=\"\">
+    <span class=\"title\">${it.title}${it.artist?` <small style=\"opacity:.7\">— ${it.artist}</small>`:''}</span>
+    <button data-del=\"${i}\">✕</button></li>`))};
 const updateNow=it=>{
   if(!it){nowBox.style.display='none';return;}
   art.src=`https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg`;
@@ -176,10 +189,10 @@ const updateNow=it=>{
 function playIdx(i){
   if(!queue.length||i<0||i>=queue.length)return;
   if(!playerReady){pendingPlay=i;updateNow(queue[i]);return;}
-  currentIdx=i;player.loadVideoById(queue[i].id);setTiny();
+  currentIdx=i;player.loadVideoById(queue[i].id);
   updateNow(queue[i]);vidDuration=0;timeLabel.textContent='0:00 / …';
 }
-const skip=()=>{if(queue.length)playIdx((currentIdx+1)%queue.length)};
+const skip=()=>queue.length&&playIdx((currentIdx+1)%queue.length);
 
 /* === transport === */
 playBtn.onclick=()=>playerReady&&(player.getPlayerState()===1?player.pauseVideo():player.playVideo());
@@ -187,18 +200,17 @@ skipBtn.onclick=skip;
 prevBtn.onclick=()=>queue.length&&playIdx((currentIdx-1+queue.length)%queue.length);
 progress.oninput=function(){if(!playerReady||!vidDuration)return;
   const t=vidDuration*this.value/100;player.seekTo(t,true);
-  timeLabel.textContent=formatTime(t)+' / '+formatTime(vidDuration);};
+  timeLabel.textContent=formatTime(t)+' / '+formatTime(vidDuration)};
 const formatTime=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
 /* === rAF progress === */
-function startProgressLoop(){requestAnimationFrame(updateProgress);}
+function startProgressLoop(){requestAnimationFrame(updateProgress)}
 function updateProgress(){
   if(!playerReady)return requestAnimationFrame(updateProgress);
   const cur=player.getCurrentTime(), dur=player.getDuration()||vidDuration;
-  if(dur) vidDuration=dur;                       /* ← keeps drag alive */
-  if(!dur)return requestAnimationFrame(updateProgress);
+  if(dur) vidDuration=dur; if(!dur)return requestAnimationFrame(updateProgress);
   const pct=cur/dur*100, buf=player.getVideoLoadedFraction()*100;
-  progress.value=pct; timeLabel.textContent=`${formatTime(cur)} / ${formatTime(dur)}`;
+  progress.value=pct;timeLabel.textContent=`${formatTime(cur)} / ${formatTime(dur)}`;
   progress.style.background=`linear-gradient(to right,
     var(--accent)0% ${pct}%,
     #555 ${pct}% ${buf}%,
@@ -209,16 +221,79 @@ function updateProgress(){
 /* === queue clicks === */
 qEl.onclick=e=>{
   const {del}=e.target.dataset;
-  if(del!==undefined){queue.splice(del,1);if(currentIdx>=del)currentIdx--;renderQueue();saveQueue();return;}
+  if(del!==undefined){queue.splice(del,1);currentIdx=Math.max(currentIdx-1,0);
+    renderQueue();saveQueue();return;}
   if(e.target.classList.contains('title'))
     playIdx([...qEl.children].indexOf(e.target.parentElement));
 };
 qEl.oncontextmenu=e=>{const li=e.target.closest('li[data-id]');if(!li)return;
   e.preventDefault();window.open('https://youtu.be/'+li.dataset.id,'_blank');};
 
+/* === playlist buttons === */
+$('savePlaylist').onclick=()=>{
+  const n=$('playlistName').value.trim();if(!n||!queue.length)return;
+  const l=getLists();l[n]=queue;setLists(l);refreshSel();alert('Playlist saved!');
+};
+$('deletePlaylist').onclick=()=>{
+  if(!sel.value)return;const l=getLists();delete l[sel.value];setLists(l);
+  refreshSel();sel.value='';
+};
+sel.onchange=function(){if(!this.value)return;
+  queue=[...getLists()[this.value]];renderQueue();saveQueue();playIdx(0)};
+$('exportPlaylist').onclick=()=>{
+  const chosen=sel.value;let data,name;
+  if(chosen){data=getLists()[chosen];name=chosen;}
+  else{if(!queue.length){alert('Nothing to export');return;}
+       data=queue;name='CurrentQueue'}
+  const blob=new Blob([JSON.stringify({name,data})],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'),{href:url,download:name+'.json'}).click();
+  URL.revokeObjectURL(url);
+};
+$('importFile').onchange=function(){const f=this.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async e=>{try{
+    const o=JSON.parse(e.target.result);if(!o.name||!Array.isArray(o.data))throw'bad';
+    for(const it of o.data) if(!it.artist) it.artist=(await fetchVideoInfo(it.id)).artist;
+    const l=getLists();l[o.name]=o.data;setLists(l);refreshSel();
+    alert('Imported “'+o.name+'” playlist!');
+  }catch{alert('Invalid playlist file');}};r.readAsText(f);this.value=''};
+
+/* === YouTube official-audio search === */
+const YT_KEY='AIzaSyCtBUhn0t1AeiHivsdmw4ro5thw6R7Ijio';
+async function searchOfficialAudio(artist,song){
+  const url='https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({
+    key:YT_KEY,part:'snippet',type:'video',maxResults:10,videoCategoryId:10,
+    q:`${song} \"Provided to YouTube by\" ${artist}`});
+  const j=await(await fetch(url)).json();if(!j.items?.length)return null;
+  const topicRE=new RegExp(`^${artist}\\s*-\\s*Topic$`,'i');
+  let hit=j.items.find(v=>topicRE.test(v.snippet.channelTitle))||j.items[0];
+  const vid=hit.id.videoId;
+  const vd=await(await fetch('https://www.googleapis.com/youtube/v3/videos?'+
+              new URLSearchParams({key:YT_KEY,part:'snippet',id:vid}))).json();
+  const good=vd.items?.[0]?.snippet?.description?.toLowerCase()
+             .includes('provided to youtube by');
+  return good?hit:null;
+}
+$('searchBtn').onclick=async()=>{
+  const mode=document.querySelector('input[name=\"mode\"]:checked').value,
+        artist=artistBox.value.trim(), song=songBox.value.trim();
+  if(mode==='code'){
+    const id=song;if(!id){alert('Paste a YouTube ID');return;}
+    const info=await fetchVideoInfo(id);
+    queue.unshift({id,title:info.title,artist:info.artist});
+    saveQueue();renderQueue();playIdx(0);songBox.value='';return;
+  }
+  if(!artist||!song){alert('Type both artist and song');return;}
+  const hit=await searchOfficialAudio(artist,song);
+  if(!hit){alert('No official audio found 😕');return;}
+  queue.unshift({id:hit.id.videoId,title:hit.snippet.title,
+                 artist:hit.snippet.channelTitle.replace(/\\s*-\Topic\\s*$/i,'').trim()});
+  saveQueue();renderQueue();playIdx(0);artistBox.value='';songBox.value='';
+};
+
 /* === init === */
-loadQueue();renderQueue();refreshSel();
-if(queue.length){const onIframe=setInterval(()=>{if(playerReady){playIdx(0);clearInterval(onIframe)}},100);}
+loadQueue();renderQueue();refreshSel(); if(queue.length) playIdx(0);
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
