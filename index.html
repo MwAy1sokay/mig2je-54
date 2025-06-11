@@ -267,13 +267,20 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
 
 #nowTitle{font-size:1.15rem}
 #nowTitle small{font-size:.9em;opacity:.7}
+@media(max-width: 600px) {
+  .controls button {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+  }
+}
 /* buffering overlay */
 #buffering{
   position:absolute;
-  inset:0;                     /* full cover */
-  display:none;                /* toggled in JS */
-  place-content:center;        /* center spinner */
-  backdrop-filter:blur(2px);   /* subtle glass */
+  inset:0;
+  display:none;
+  place-content:center;
+  backdrop-filter:blur(2px);
 }
 
 /* simple ring spinner */
@@ -285,7 +292,6 @@ li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1;}
   border-radius:50%;
   animation:spin .8s linear infinite;
 }
-
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
