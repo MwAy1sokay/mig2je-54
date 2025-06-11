@@ -369,16 +369,7 @@ const formatTime = s => {
   const sec = Math.floor(s % 60).toString().padStart(2,'0');
   return m + ':' + sec;
 };
-setInterval(() => {
-  if (!playerReady || !player.getDuration) return;
-  const dur = player.getDuration();
-  if (dur) vidDuration = dur;
-  if (!vidDuration) return;
-  const cur = player.getCurrentTime();
-  progress.value = (cur / vidDuration) * 100;
-  timeLabel.textContent =
-        formatTime(cur) + ' / ' + formatTime(vidDuration);
-}, 1000);
+
 function waitForDuration () {
   const probe = setInterval(() => {
     const d = player.getDuration();
@@ -390,7 +381,37 @@ function waitForDuration () {
   }, 200);
   setTimeout(() => clearInterval(probe), 4000);
 }
+/* ───────── smooth progress bar (rAF) ───────── */
+function startProgressLoop () { requestAnimationFrame(updateProgress) }
 
+function updateProgress () {
+  if (!playerReady) return requestAnimationFrame(updateProgress)
+
+  const cur = player.getCurrentTime()
+  const dur = player.getDuration() || vidDuration
+  if (!dur) return requestAnimationFrame(updateProgress)
+
+  const pct      = (cur / dur) * 100
+  const buffered = player.getVideoLoadedFraction() * 100
+
+  progress.value = pct                // thumb
+  timeLabel.textContent =
+      formatTime(cur) + ' / ' + formatTime(dur)
+
+  progress.style.background =
+    `linear-gradient(to right,
+       var(--accent) 0%   ${pct}%,
+       #555        ${pct}% ${buffered}%,
+       var(--border) ${buffered}%, var(--border) 100%)`
+
+  requestAnimationFrame(updateProgress)
+}
+onReady: () => {
+  playerReady = true
+  setTiny()
+  if (pendingPlay !== null) { playIdx(pendingPlay); pendingPlay = null }
++  startProgressLoop()       // ← add this line
+},- }, 1000)
 /* ---------- queue clicks ---------- */
 qEl.addEventListener('click', e => {
   const { del } = e.target.dataset;
