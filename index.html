@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mattmusikspelaresajt 1.42 — Fixed</title>
+  <title>Mattmusikspelaresajt 1.43</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <!-- Favicons / manifest -->
@@ -16,134 +16,97 @@
   <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
-    /* ─── Theme variables ───────────────────────────────────────────── */
     :root{
       --bg:#000;--panel:#111;--border:#333;--text:#fffcfc;
       --accent:#00877c;--accent-soft:#00cfbe;--gap:.65rem;
     }
-
-    /* ─── Basic reset / layout ──────────────────────────────────────── */
     *{box-sizing:border-box}
-    body{
-      margin:0 auto;max-width:720px;padding:1.25rem;
-      background:var(--bg);color:var(--text);
-      font:400 1rem/1.45 "Overpass",Arial,Helvetica,sans-serif;
-    }
+    body{margin:0 auto;max-width:720px;padding:1.25rem;background:var(--bg);color:var(--text);font:400 1rem/1.45 "Overpass",Arial,Helvetica,sans-serif}
     h1{margin:0 0 1.3rem;text-align:center;font-weight:600;letter-spacing:.03em}
     a,button,input,select{font:inherit;color:inherit}
 
-    /* ─── Inputs & buttons ──────────────────────────────────────────── */
-    input[type=text],input[type=range],select{
-      background:var(--panel);border:1px solid var(--border);color:var(--text);
-      border-radius:4px;
-    }
+    /* Inputs & buttons */
+    input[type=text],input[type=range],select{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px}
     input[type=text],select{padding:.5rem .6rem}
-    button{
-      padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;
-      background:var(--accent);color:#fff;transition:background .15s,transform .15s;
-    }
+    button{padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;transition:background .15s,transform .15s}
     button:disabled{opacity:.35;cursor:default}
     button:not(:disabled):hover{background:var(--accent-soft)}
     button:not(:disabled):active{transform:scale(.97)}
     :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-    /* ─── Top “now playing” area ────────────────────────────────────── */
+    /* Now-playing strip */
     #nowPlaying{display:flex;align-items:center;gap:.75rem;flex-wrap:nowrap}
     #nowTitle{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #nowTitle small{font-size:.9em;opacity:.7}
 
-    /* square artwork wrapper */
-    #videoWrap{
-      position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1/1;
-      border-radius:6px;overflow:hidden;background:#000;
-    }
+    #videoWrap{position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1;border-radius:6px;overflow:hidden;background:#000}
     #videoWrap #player{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-    #art{
-      width:100%;height:100%;object-fit:cover;object-position:center;
-      border-radius:6px;opacity:0;transition:opacity .4s;
-    }
+    #art{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:6px;opacity:0;transition:opacity .4s}
     #art[src]{opacity:1}
 
-    /* buffering spinner */
-    #buffering{position:absolute;inset:0;display:none;place-content:center;
-               backdrop-filter:blur(2px)}
-    #buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;
-                      border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+    #buffering{position:absolute;inset:0;display:none;place-content:center;backdrop-filter:blur(2px)}
+    #buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ─── Main controls ─────────────────────────────────────────────── */
-    .controls{
-      display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;
-      margin:1.05rem 0 var(--gap);
-    }
-    .controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;
-      appearance:none;background:var(--border);border-radius:4px}
-    .controls input[type=range]::-webkit-slider-thumb{
-      appearance:none;width:14px;height:14px;border-radius:50%;
-      background:var(--accent);border:0;margin-top:-3.5px;cursor:pointer}
+    /* Transport controls */
+    .controls{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;margin:1.05rem 0 var(--gap)}
+    .controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;appearance:none;background:var(--border);border-radius:4px}
+    .controls input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);border:0;margin-top:-3.5px;cursor:pointer}
     #time{font-variant-numeric:tabular-nums;opacity:.8}
-
-    /* ── mobile: square icon buttons ── */
     @media(max-width:600px){
       #time{flex:1 1 100%;text-align:left;margin-top:.25rem}
       .controls button{width:48px;height:48px;padding:0;font-size:1.25rem;flex:0 0 auto}
     }
 
-    /* ─── Search bars & mode toggle ─────────────────────────────────── */
+    /* Search */
     .search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
     .search-bar input{flex:1 1 12rem;width:auto}
     .search-bar+.search-bar{margin-top:var(--gap)}
     .search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
     .hidden{display:none}
 
-    /* ─── Queue list ────────────────────────────────────────────────── */
-    #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);
-               border:1px solid var(--border);border-radius:6px}
-    #queue li{
-      display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;
-      border-bottom:1px solid var(--border);transition:background .15s}
+    /* Queue */
+    #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:6px}
+    #queue li{display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;border-bottom:1px solid var(--border);transition:background .15s}
     #queue li:last-child{border-bottom:none}
     #queue li:hover{background:#181818}
     #queue li span.title{flex:1;cursor:pointer;user-select:none}
-    #queue li img.thumb{
-      width:48px;height:48px;flex:0 0 auto;object-fit:cover;object-position:center;
-      border-radius:4px}
+    #queue li img.thumb{width:48px;height:48px;flex:0 0 auto;object-fit:cover;object-position:center;border-radius:4px}
     .drag-handle{cursor:grab;font-size:1.1rem;line-height:1;padding:0 .25rem;opacity:.7}
     li.sortable-chosen .drag-handle{cursor:grabbing;opacity:1}
     #queue li button{padding:.25rem .7rem}
 
-    /* ─── Playlist controls ─────────────────────────────────────────── */
-    .playlist-controls{
-      margin-top:1.8rem;padding:1rem;background:var(--panel);
-      border:1px solid var(--border);border-radius:6px}
+    /* Playlists */
+    .playlist-controls{margin-top:1.8rem;padding:1rem;background:var(--panel);border:1px solid var(--border);border-radius:6px}
     .playlist-controls h3{margin:0 0 .8rem;font-weight:600}
     .playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
     .playlist-controls input[type=file]{display:none}
   </style>
 </head>
-<body>
-<h1>Mattmusikspelaresajt 1.42</h1>
 
-<!-- ── now-playing strip ─────────────────────────────────────────── -->
+<body>
+<h1>Mattmusikspelaresajt 1.43</h1>
+
+<!-- now-playing -->
 <div id="nowPlaying">
   <div id="videoWrap">
     <div id="player" allow="autoplay"></div>
-    <img id="art" alt="">
+    <img id="art" alt="Artwork">
     <div id="buffering" aria-hidden="true"></div>
   </div>
   <span id="nowTitle"></span>
 </div>
 
-<!-- ── transport controls ────────────────────────────────────────── -->
+<!-- transport -->
 <div class="controls">
-  <button id="prev" title="Previous">⏮</button>
+  <button id="prev"  title="Previous">⏮</button>
   <button id="playPause" title="Play / Pause">▶</button>
-  <button id="skip" title="Next">⏭</button>
+  <button id="skip"  title="Next">⏭</button>
   <span id="time" style="min-width:5.5rem;text-align:center">0:00 / 0:00</span>
   <input type="range" id="progress" min="0" max="100" value="0">
 </div>
 
-<!-- ── search ─────────────────────────────────────────────────────── -->
+<!-- search -->
 <div class="search-bar">
   <input id="artistInput" type="text" placeholder="Artist name">
   <input id="songInput"   type="text" placeholder="Song title">
@@ -154,10 +117,11 @@
   <label><input type="radio" name="mode" value="code"> Paste ID</label>
 </div>
 
-<!-- ── queue & playlists ──────────────────────────────────────────── -->
+<!-- queue -->
 <h2>Music Queue</h2>
 <div id="queueWrap"><ul id="queue"></ul></div>
 
+<!-- playlists -->
 <div class="playlist-controls">
   <h3>Playlists</h3>
   <input id="playlistName" placeholder="New playlist name">
@@ -168,386 +132,263 @@
   <label>Import <input type="file" id="importFile" accept=".json"></label>
 </div>
 
-<!-- ── Script & dependencies ──────────────────────────────────────── -->
+<!-- deps -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <script>
-/* ---------- state & helpers ---------- */
+/* ===== helpers & element cache ===== */
 const $ = id => document.getElementById(id);
-
-/* cache every element once */
 const ui = {
-  /* search / mode */
-  artist     : $('artistInput'),
-  song       : $('songInput'),
-  modeRadios : document.querySelectorAll('input[name="mode"]'),
-
-  /* now-playing */
-  nowBox     : $('nowPlaying'),
-  nowTitle   : $('nowTitle'),
-  art        : $('art'),
-  playerBox  : $('player'),
-  buffering  : $('buffering'),
-
-  /* transport */
-  playBtn    : $('playPause'),
-  prevBtn    : $('prev'),
-  skipBtn    : $('skip'),
-  timeLbl    : $('time'),
-  slider     : $('progress'),
-
-  /* queue & playlists */
-  queueUL    : $('queue'),
-  listSel    : $('playlistSelect')
+  artist:$('artistInput'), song:$('songInput'),
+  modeRadios:document.querySelectorAll('input[name="mode"]'),
+  nowBox:$('nowPlaying'), nowTitle:$('nowTitle'), art:$('art'), buffering:$('buffering'),
+  playBtn:$('playPause'), prevBtn:$('prev'), skipBtn:$('skip'),
+  timeLbl:$('time'), slider:$('progress'),
+  queueUL:$('queue'), listSel:$('playlistSelect')
 };
+const { artist:artistBox, song:songBox, modeRadios, nowBox,
+        nowTitle:nowT, art, buffering, playBtn, prevBtn, skipBtn,
+        timeLbl:timeLabel, slider:progress, queueUL:qEl, listSel:sel } = ui;
 
-/* --- one-shot destructuring: gives old variable names back --- */
-const {
-  artist  : artistBox,
-  song    : songBox,
-  modeRadios,
-  nowBox,
-  nowTitle: nowT,
-  art,
-  buffering,
-  playBtn,
-  prevBtn,
-  skipBtn,
-  timeLbl: timeLabel,
-  slider : progress,
-  queueUL: qEl,
-  listSel: sel
-} = ui;
+/* ===== state ===== */
+let queue=[], currentIdx=-1;
+let player, playerReady=false, pendingPlay=null;
+let vidDuration=0;
 
-/* ---------- app-level vars ---------- */
-let queue = [], currentIdx = -1;
-let player, playerReady = false, pendingPlay = null;
-let vidDuration = 0;
-
-/* ---------- mode-switch handler ---------- */
-modeRadios.forEach(r => r.addEventListener('change', () => {
-  const codeMode = document.querySelector('input[name="mode"]:checked').value === 'code';
-  artistBox.classList.toggle('hidden', codeMode);
-  songBox.placeholder = codeMode ? 'YouTube video ID' : 'Song title';
+/* ===== mode toggle ===== */
+modeRadios.forEach(r=>r.addEventListener('change',()=>{
+  const codeMode=document.querySelector('input[name="mode"]:checked').value==='code';
+  artistBox.classList.toggle('hidden',codeMode);
+  songBox.placeholder=codeMode?'YouTube video ID':'Song title';
 }));
 
-/* ---------- sortable queue ---------- */
-new Sortable(ui.queueUL,{
-  handle: '.drag-handle',
-  animation:150,
-  onEnd: e => {
-    queue.splice(e.newIndex, 0, queue.splice(e.oldIndex, 1)[0]);
-    saveQueue();
-  }
+/* ===== drag-reorder queue ===== */
+new Sortable(qEl,{handle:'.drag-handle',animation:150,
+  onEnd:e=>{queue.splice(e.newIndex,0,queue.splice(e.oldIndex,1)[0]);saveQueue();}
 });
 
-/* ---------- persistence ---------- */
-const loadQueue = () => {
-  const m = document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
-  queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
-};
-const saveQueue = () =>
-  document.cookie = 'queue=' + encodeURIComponent(JSON.stringify(queue)) +
-                    ';max-age=31536000;path=/';
+/* ===== persistence ===== */
+const loadQueue=()=>{const m=document.cookie.match(/(?:^|;\\s*)queue=([^;]+)/);
+                     queue=m?JSON.parse(decodeURIComponent(m[1])):[]};
+const saveQueue=()=>document.cookie='queue='+encodeURIComponent(JSON.stringify(queue))+';max-age=31536000;path=/';
 
-/* ---------- playlists ---------- */
-const LS = 'playlists';
-const getLists = () => JSON.parse(localStorage.getItem(LS) || '{}');
-const setLists = o  => localStorage.setItem(LS, JSON.stringify(o));
-const refreshSel = () => {
-  sel.innerHTML = '<option value="">— Load playlist —</option>';
-  Object.keys(getLists()).sort()
-        .forEach(n => sel.insertAdjacentHTML('beforeend', `<option>${n}</option>`));
-};
+/* playlists */
+const LS='playlists';
+const getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}');
+const setLists=o=>localStorage.setItem(LS,JSON.stringify(o));
+const refreshSel=()=>{sel.innerHTML='<option value=\"\">— Load playlist —</option>';
+  Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`))};
 
-/* ---------- YouTube iframe API bootstrap ---------- */
+/* ===== YouTube IFrame API ===== */
 function onYouTubeIframeAPIReady(){
-  player = new YT.Player('player',{
-    height:'225', width:'400',
-    playerVars:{controls:0, playsinline:1},
+  player=new YT.Player('player',{
+    height:'225',width:'400',
+    playerVars:{controls:0,playsinline:1},
     events:{
-      onReady:() => {
-        playerReady = true;
-        setTiny();
-        if (pendingPlay !== null){ playIdx(pendingPlay); pendingPlay = null; }
+      onReady:()=>{
+        playerReady=true;setTiny();
+        if(pendingPlay!==null){playIdx(pendingPlay);pendingPlay=null;}
+        startProgressLoop();
       },
-      onStateChange:e => {
-        if (e.data === 0) skip();               // autoplay next
-        playBtn.textContent = (e.data === 1) ? '⏸' : '▶';
-        buffering.style.display = (e.data === 3) ? 'grid' : 'none';
+      onStateChange:e=>{
+        if(e.data===0) skip();
+        playBtn.textContent=(e.data===1)?'⏸':'▶';
+        buffering.style.display=(e.data===3)?'grid':'none';
       }
     }
   });
 }
-const setTiny = () => { try { player.setPlaybackQuality('tiny'); } catch {} };
+const setTiny=()=>{try{player.setPlaybackQuality('tiny');}catch{}};
 
-/* ---------- noembed helper ---------- */
-const fetchVideoInfo = async id => {
-  try {
-    const r = await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
-    const j = await r.json();
-    const rawArtist = j.author_name || '';
-    const artist = rawArtist.replace(/\s*[–-]\s*Topic\s*$/i, '');
-    return { title: j.title || id, artist };
-  } catch {
-    return { title: id, artist: '' };
-  }
+/* ===== video info helper ===== */
+const fetchVideoInfo=async id=>{
+  try{
+    const r=await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`);
+    const j=await r.json();
+    const artist=j.author_name?.replace(/\\s*[–-]\\s*Topic\\s*$/i,'')||'';
+    return{title:j.title||id,artist};
+  }catch{return{title:id,artist:''}};
 };
 
-/* ---------- back-fill artist on legacy queue ---------- */
-async function backfillArtists () {
-  const tasks = queue.map(async (it, i) => {
-    if (it.artist) return;
-    try {
-      const info = await fetchVideoInfo(it.id);
-      queue[i].artist = info.artist;
-    } catch {}
-  });
-  await Promise.all(tasks);
-  saveQueue();
-  renderQueue();
-  updateNow(queue[currentIdx]);
+/* ===== back-fill legacy queue ===== */
+async function backfillArtists(){
+  await Promise.all(queue.map(async(it,i)=>{
+    if(it.artist) return;
+    try{queue[i].artist=(await fetchVideoInfo(it.id)).artist;}catch{}
+  }));
+  saveQueue(); renderQueue(); updateNow(queue[currentIdx]);
 }
 
-/* ---------- UI renderers ---------- */
-const renderQueue = () => {
-  qEl.innerHTML = '';
-  queue.forEach((it, i) =>
-    qEl.insertAdjacentHTML('beforeend', `
-      <li data-id="${it.id}">
-        <span class="drag-handle" aria-hidden="true">≡</span>
-        <img class="thumb" loading="lazy"
-             src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
-        <span class="title">
-          ${it.title || it.id}
-          ${it.artist ? `<small style="opacity:.7"> — ${it.artist}</small>` : ''}
-        </span>
-        <button data-del="${i}">✕</button>
-      </li>`));
+/* ===== UI renderers ===== */
+const renderQueue=()=>{
+  qEl.innerHTML='';
+  queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
+    <li data-id=\"${it.id}\">
+      <span class=\"drag-handle\" aria-hidden=\"true\">≡</span>
+      <img class=\"thumb\" loading=\"lazy\" src=\"https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg\" alt=\"\">
+      <span class=\"title\">${it.title||it.id}${it.artist?` <small style=\"opacity:.7\">— ${it.artist}</small>`:''}</span>
+      <button data-del=\"${i}\">✕</button>
+    </li>`));
+};
+const updateNow=it=>{
+  if(!it){nowBox.style.display='none';return;}
+  art.src=`https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg`;
+  nowT.innerHTML=it.title+(it.artist?` <small>— ${it.artist}</small>`:'');
+  nowBox.style.display='flex';
 };
 
-const updateNow = it => {
-  if (!it){ nowBox.style.display = 'none'; return; }
-  art.src = `https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg`;
-  nowT.innerHTML = it.title + (it.artist ? ` <small>— ${it.artist}</small>` : '');
-  nowBox.style.display = 'flex';
-};
-
-/* ---------- playback ---------- */
-function playIdx (i) {
-  if (!queue.length || i < 0 || i >= queue.length) return;
-  if (!playerReady){ pendingPlay = i; updateNow(queue[i]); return; }
-  currentIdx = i;
+/* ===== playback ===== */
+function playIdx(i){
+  if(!queue.length||i<0||i>=queue.length) return;
+  if(!playerReady){pendingPlay=i;updateNow(queue[i]);return;}
+  currentIdx=i;
   player.loadVideoById(queue[i].id);
-  setTiny();
-  updateNow(queue[i]);
-  vidDuration = 0;
-  timeLabel.textContent = '0:00 / …';
-  waitForDuration();
+  setTiny(); updateNow(queue[i]);
+  vidDuration=0; timeLabel.textContent='0:00 / …';
 }
-const skip = () => { if (queue.length) playIdx((currentIdx + 1) % queue.length); };
+const skip=()=>{if(queue.length) playIdx((currentIdx+1)%queue.length)};
 
-/* ---------- transport handlers ---------- */
-playBtn.addEventListener('click', () => {
-  if (!playerReady) return;
-  (player.getPlayerState() === 1) ? player.pauseVideo() : player.playVideo();
+/* ===== transport handlers ===== */
+playBtn.addEventListener('click',()=>{if(!playerReady)return;
+  (player.getPlayerState()===1)?player.pauseVideo():player.playVideo()
 });
-skipBtn.addEventListener('click', skip);
-prevBtn.addEventListener('click', () => {
-  if (!queue.length) return;
-  const back = (currentIdx - 1 + queue.length) % queue.length;
-  playIdx(back);
+skipBtn.addEventListener('click',skip);
+prevBtn.addEventListener('click',()=>{
+  if(!queue.length) return;
+  playIdx((currentIdx-1+queue.length)%queue.length);
 });
-progress.addEventListener('input', function () {
-  if (!playerReady || !vidDuration) return;
-  const newTime = vidDuration * this.value / 100;
-  player.seekTo(newTime, true);
-  timeLabel.textContent =
-        formatTime(newTime) + ' / ' + formatTime(vidDuration);
+progress.addEventListener('input',function(){
+  if(!playerReady||!vidDuration)return;
+  const newTime=vidDuration*this.value/100;
+  player.seekTo(newTime,true);
+  timeLabel.textContent=formatTime(newTime)+' / '+formatTime(vidDuration);
 });
-const formatTime = s => {
-  const m   = Math.floor(s / 60);
-  const sec = Math.floor(s % 60).toString().padStart(2,'0');
-  return m + ':' + sec;
+const formatTime=s=>{
+  const m=Math.floor(s/60), sec=Math.floor(s%60).toString().padStart(2,'0');
+  return m+':'+sec;
 };
 
-function waitForDuration () {
-  const probe = setInterval(() => {
-    const d = player.getDuration();
-    if (d){
-      vidDuration = d;
-      timeLabel.textContent = '0:00 / ' + formatTime(d);
-      clearInterval(probe);
-    }
-  }, 200);
-  setTimeout(() => clearInterval(probe), 4000);
+/* ===== smooth rAF progress bar ===== */
+function startProgressLoop(){requestAnimationFrame(updateProgress)}
+function updateProgress(){
+  if(!playerReady) return requestAnimationFrame(updateProgress);
+  const cur=player.getCurrentTime();
+  const dur=player.getDuration()||vidDuration;
+  if(!dur) return requestAnimationFrame(updateProgress);
+  const pct=(cur/dur)*100, buffered=player.getVideoLoadedFraction()*100;
+  progress.value=pct;
+  timeLabel.textContent=formatTime(cur)+' / '+formatTime(dur);
+  progress.style.background=`
+    linear-gradient(to right,
+      var(--accent) 0% ${pct}%,
+      #555 ${pct}% ${buffered}%,
+      var(--border) ${buffered}%, var(--border) 100%)`;
+  requestAnimationFrame(updateProgress);
 }
-/* ───────── smooth progress bar (rAF) ───────── */
-function startProgressLoop () { requestAnimationFrame(updateProgress) }
 
-function updateProgress () {
-  if (!playerReady) return requestAnimationFrame(updateProgress)
-
-  const cur = player.getCurrentTime()
-  const dur = player.getDuration() || vidDuration
-  if (!dur) return requestAnimationFrame(updateProgress)
-
-  const pct      = (cur / dur) * 100
-  const buffered = player.getVideoLoadedFraction() * 100
-
-  progress.value = pct                // thumb
-  timeLabel.textContent =
-      formatTime(cur) + ' / ' + formatTime(dur)
-
-  progress.style.background =
-    `linear-gradient(to right,
-       var(--accent) 0%   ${pct}%,
-       #555        ${pct}% ${buffered}%,
-       var(--border) ${buffered}%, var(--border) 100%)`
-
-  requestAnimationFrame(updateProgress)
-}
-onReady: () => {
-  playerReady = true
-  setTiny()
-  if (pendingPlay !== null) { playIdx(pendingPlay); pendingPlay = null }
-+  startProgressLoop()       // ← add this line
-},- }, 1000)
-/* ---------- queue clicks ---------- */
-qEl.addEventListener('click', e => {
-  const { del } = e.target.dataset;
-  if (del !== undefined){
-    queue.splice(del, 1);
-    if (currentIdx >= del) currentIdx--;
-  } else if (e.target.classList.contains('title')){
-    playIdx([...qEl.children].indexOf(e.target.parentElement));
-    return;
-  } else return;
-  renderQueue(); saveQueue();
-});
-qEl.addEventListener('contextmenu', e => {
-  const li = e.target.closest('li[data-id]');
-  if (!li) return;
-  e.preventDefault();
-  window.open('https://youtu.be/' + li.dataset.id, '_blank');
-});
-
-/* ---------- playlists UI ---------- */
-document.getElementById('savePlaylist').addEventListener('click', () => {
-  const n = document.getElementById('playlistName').value.trim();
-  if (!n || !queue.length) return;
-  const l = getLists(); l[n] = queue; setLists(l);
-  refreshSel(); alert('Playlist saved!');
-});
-sel.addEventListener('change', function(){
-  if (!this.value) return;
-  queue = [...getLists()[this.value]];
-  renderQueue(); saveQueue(); playIdx(0);
-});
-document.getElementById('deletePlaylist').addEventListener('click', () => {
-  if (!sel.value) return;
-  const l = getLists(); delete l[sel.value]; setLists(l);
-  refreshSel(); sel.value = '';
-});
-
-/* ---------- export / import ---------- */
-document.getElementById('exportPlaylist').addEventListener('click', () => {
-  const chosen = sel.value; let data, name;
-  if (chosen){ data = getLists()[chosen]; name = chosen; }
-  else {
-    if (!queue.length){ alert('Nothing to export'); return; }
-    data = queue; name = 'CurrentQueue';
+/* ===== queue clicks ===== */
+qEl.addEventListener('click',e=>{
+  const {del}=e.target.dataset;
+  if(del!==undefined){
+    queue.splice(del,1);
+    if(currentIdx>=del) currentIdx--;
+    renderQueue(); saveQueue(); return;
   }
-  const blob = new Blob([JSON.stringify({name, data})], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  Object.assign(document.createElement('a'), {href:url, download:name + '.json'}).click();
+  if(e.target.classList.contains('title')){
+    playIdx([...qEl.children].indexOf(e.target.parentElement));
+  }
+});
+qEl.addEventListener('contextmenu',e=>{
+  const li=e.target.closest('li[data-id]'); if(!li) return;
+  e.preventDefault(); window.open('https://youtu.be/'+li.dataset.id,'_blank');
+});
+
+/* ===== playlist buttons ===== */
+document.getElementById('savePlaylist').addEventListener('click',()=>{
+  const n=document.getElementById('playlistName').value.trim();
+  if(!n||!queue.length) return;
+  const l=getLists(); l[n]=queue; setLists(l); refreshSel(); alert('Playlist saved!');
+});
+sel.addEventListener('change',function(){
+  if(!this.value) return;
+  queue=[...getLists()[this.value]]; renderQueue(); saveQueue(); playIdx(0);
+});
+document.getElementById('deletePlaylist').addEventListener('click',()=>{
+  if(!sel.value) return;
+  const l=getLists(); delete l[sel.value]; setLists(l); refreshSel(); sel.value='';
+});
+
+/* ===== export / import ===== */
+document.getElementById('exportPlaylist').addEventListener('click',()=>{
+  const chosen=sel.value; let data,name;
+  if(chosen){data=getLists()[chosen]; name=chosen;}
+  else{if(!queue.length){alert('Nothing to export');return;} data=queue; name='CurrentQueue';}
+  const blob=new Blob([JSON.stringify({name,data})],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'),{href:url,download:name+'.json'}).click();
   URL.revokeObjectURL(url);
 });
-document.getElementById('importFile').addEventListener('change', function () {
-  const f = this.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = async e => {
+document.getElementById('importFile').addEventListener('change',function(){
+  const f=this.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=async e=>{
     try{
-      const o = JSON.parse(e.target.result);
-      if (!o.name || !Array.isArray(o.data)) throw 'bad';
-      for (const it of o.data){
-        if (!it.artist){
-          const info = await fetchVideoInfo(it.id);
-          it.artist = info.artist;
-        }
+      const o=JSON.parse(e.target.result);
+      if(!o.name||!Array.isArray(o.data)) throw 'bad';
+      for(const it of o.data){
+        if(!it.artist) it.artist=(await fetchVideoInfo(it.id)).artist;
       }
-      const l = getLists(); l[o.name] = o.data; setLists(l);
-      refreshSel(); alert('Imported “‘' + o.name + '” playlist!');
-    } catch{ alert('Invalid playlist file'); }
+      const l=getLists(); l[o.name]=o.data; setLists(l); refreshSel();
+      alert('Imported “'+o.name+'” playlist!');
+    }catch{alert('Invalid playlist file');}
   };
-  r.readAsText(f); this.value = '';
+  r.readAsText(f); this.value='';
 });
 
-/* ---------- YouTube official audio search ---------- */
-const YT_KEY = 'AIzaSyCtBUhn0t1AeiHivsdmw4ro5thw6R7Ijio';
-
-async function searchOfficialAudio (artist, song) {
-  const q = `${song} "Provided to YouTube by" ${artist}`;
-  const url = 'https://www.googleapis.com/youtube/v3/search?' +
-              new URLSearchParams({
-                key: YT_KEY, part:'snippet', type:'video',
-                maxResults:10, videoCategoryId:10, q
-              });
-  const r = await fetch(url);
-  const j = await r.json();
-  if (!j.items?.length) return null;
-  const topicRE = new RegExp(`^${artist}\\s*-\\s*Topic$`, 'i');
-  let hit = j.items.find(v => topicRE.test(v.snippet.channelTitle));
-  if (!hit) hit = j.items[0];
-  const vid = hit.id.videoId;
-  const vr = await fetch('https://www.googleapis.com/youtube/v3/videos?' +
-              new URLSearchParams({key:YT_KEY, part:'snippet', id:vid}));
-  const vd = await vr.json();
-  const good = vd.items?.[0]?.snippet?.description
-                 ?.toLowerCase().includes('provided to youtube by');
-  return good ? hit : null;
+/* ===== YouTube official-audio search ===== */
+const YT_KEY='AIzaSyCtBUhn0t1AeiHivsdmw4ro5thw6R7Ijio';
+async function searchOfficialAudio(artist,song){
+  const q=`${song} \"Provided to YouTube by\" ${artist}`;
+  const url='https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({
+    key:YT_KEY,part:'snippet',type:'video',maxResults:10,videoCategoryId:10,q
+  });
+  const j=await(await fetch(url)).json();
+  if(!j.items?.length) return null;
+  const topicRE=new RegExp(`^${artist}\\s*-\\s*Topic$`,'i');
+  let hit=j.items.find(v=>topicRE.test(v.snippet.channelTitle)); if(!hit) hit=j.items[0];
+  const vid=hit.id.videoId;
+  const vd=await(await fetch('https://www.googleapis.com/youtube/v3/videos?'+
+      new URLSearchParams({key:YT_KEY,part:'snippet',id:vid}))).json();
+  const good=vd.items?.[0]?.snippet?.description?.toLowerCase()
+               .includes('provided to youtube by');
+  return good?hit:null;
 }
-
-/* ---------- search button ---------- */
-document.getElementById('searchBtn').addEventListener('click', async () => {
-  const mode   = document.querySelector('input[name="mode"]:checked').value;
-  const artist = artistBox.value.trim();
-  const song   = songBox.value.trim();
-
-  /* Paste ID mode */
-  if (mode === 'code'){
-    const id = song;
-    if (!id){ alert('Paste a YouTube ID'); return; }
-    const info = await fetchVideoInfo(id);
-    queue.unshift({id, title:info.title, artist:info.artist});
-    saveQueue(); renderQueue(); playIdx(0);
-    songBox.value = ''; return;
+document.getElementById('searchBtn').addEventListener('click',async()=>{
+  const mode=document.querySelector('input[name=\"mode\"]:checked').value;
+  const artist=artistBox.value.trim(), song=songBox.value.trim();
+  if(mode==='code'){                // ID paste mode
+    const id=song; if(!id){alert('Paste a YouTube ID');return;}
+    const info=await fetchVideoInfo(id);
+    queue.unshift({id,title:info.title,artist:info.artist});
+    saveQueue(); renderQueue(); playIdx(0); songBox.value=''; return;
   }
-
-  /* Artist + Title mode */
-  if (!artist || !song){ alert('Type both artist and song'); return; }
+  if(!artist||!song){alert('Type both artist and song');return;}
   try{
-    const hit = await searchOfficialAudio(artist, song);
-    if (!hit){ alert('No official audio found 😕'); return; }
-    const cleanArtist = hit.snippet.channelTitle.replace(/\s*-\s*Topic\s*$/i,'').trim();
-    queue.unshift({
-      id:hit.id.videoId,
-      title:hit.snippet.title,
-      artist:cleanArtist
-    });
+    const hit=await searchOfficialAudio(artist,song);
+    if(!hit){alert('No official audio found 😕');return;}
+    const cleanArtist=hit.snippet.channelTitle.replace(/\\s*-\Topic\\s*$/i,'').trim();
+    queue.unshift({id:hit.id.videoId,title:hit.snippet.title,artist:cleanArtist});
     saveQueue(); renderQueue(); playIdx(0);
-    artistBox.value = ''; songBox.value = '';
-  } catch(err){
-    console.error(err);
-    alert('Search failed – check the console or your API quota');
-  }
+    artistBox.value=''; songBox.value='';
+  }catch(err){console.error(err); alert('Search failed – API quota?');}
 });
 
-/* ---------- init ---------- */
-(async () => {
+/* ===== init ===== */
+(async()=>{
   loadQueue();
   await backfillArtists();
   refreshSel();
-  if (queue.length) playIdx(0);
+  if(queue.length) playIdx(0);
 })();
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
