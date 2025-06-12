@@ -50,6 +50,12 @@ button:not(:disabled):active{transform:scale(.97)}
 
 #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);
            border-radius:6px}
+#queueWrap{scrollbar-width:thin;scrollbar-color:var(--accent) var(--panel);}
+#queueWrap::-webkit-scrollbar{width:8px;}
+#queueWrap::-webkit-scrollbar-track{background:var(--panel);}
+#queueWrap::-webkit-scrollbar-thumb{background:var(--accent);
+           border:2px solid var(--panel);border-radius:4px;}
+#queueWrap::-webkit-scrollbar-thumb:hover{background:var(--accent-soft);}
 #queue li{display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;
           border-bottom:1px solid var(--border)}
 #queue li:hover{background:#181818}
@@ -63,6 +69,7 @@ button:not(:disabled):active{transform:scale(.97)}
 .playlist-controls h3{margin:0 0 .8rem;font-weight:600}
 .playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
 .playlist-controls input[type=file]{display:none}
+
 </style>
 </head>
 <body>
