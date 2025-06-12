@@ -300,7 +300,7 @@ $('searchBtn').onclick=async()=>{
   const hit=await searchOfficialAudio(artist,song);
   if(!hit){alert('No official audio found 😕');return;}
   queue.unshift({id:hit.id.videoId,title:hit.snippet.title,
-                 artist:hit.snippet.channelTitle.replace(/\\s*-\Topic\\s*$/i,'').trim()});
+                 artist:hit.snippet.channelTitle.replace(/\\s*-\\s*Topic\\s*$/i,'').trim()});
   saveQueue();renderQueue();playIdx(0);artistBox.value='';songBox.value='';
 };
 
