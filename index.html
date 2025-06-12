@@ -41,7 +41,7 @@ button:not(:disabled):active{transform:scale(.97)}
 @media(max-width:600px){#time{flex:1 1 100%;text-align:left;margin-top:.25rem}
                         .controls button{width:48px;height:48px;padding:0;font-size:1.25rem}}
 .search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
-.search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
+.search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin:0}
 .hidden{display:none}
 #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);
            border-radius:6px}
@@ -63,7 +63,7 @@ button:not(:disabled):active{transform:scale(.97)}
                    border:1px solid var(--border);border-radius:6px}
 .playlist-controls h3{margin:0 0 .8rem;font-weight:600}
 .playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
-.search-mode{display:flex;justify-content:center;margin:.4rem 0;}
+.search-mode{display:flex;margin:0;}
 .toggle{position:relative;width:46px;height:24px;cursor:pointer}
 .toggle input{opacity:0;width:0;height:0}
 .slider{position:absolute;inset:0;background:var(--panel);border:1px solid var(--border);
@@ -96,16 +96,15 @@ button:not(:disabled):active{transform:scale(.97)}
 
 <!-- search -->
 <div class="search-bar">
+  <div class="search-mode">
+    <label class="toggle">
+      <input id="modeToggle" type="checkbox" aria-label="Toggle to Paste-ID mode">
+      <span class="slider"></span>
+    </label>
+  </div>
   <input id="artistInput" type="text" placeholder="Artist name">
   <input id="songInput" type="text" placeholder="Song title">
   <button id="searchBtn">Search & Play</button>
-</div>
-
-<div class="search-mode">
-  <label class="toggle">
-    <input id="modeToggle" type="checkbox" aria-label="Toggle to Paste-ID mode">
-    <span class="slider"></span>
-  </label>
 </div>
 <h2>Music Queue</h2>
 <div id="queueWrap"><ul id="queue"></ul></div>
@@ -130,7 +129,7 @@ const ui={artist:$('artistInput'),song:$('songInput'),
   playBtn:$('playPause'),prevBtn:$('prev'),skipBtn:$('skip'),
   timeLbl:$('time'),slider:$('progress'),
   queueUL:$('queue'),listSel:$('playlistSelect')};
-const {artist:artistBox,song:songBox,modeRadios,nowBox,
+const {artist:artistBox,song:songBox,nowBox,
        nowTitle:nowT,art,buffering,playBtn,prevBtn,skipBtn,
        timeLbl:timeLabel,slider:progress,queueUL:qEl,listSel:sel}=ui;
 progress.step='any';                         /* smooth thumb */
@@ -289,9 +288,9 @@ async function searchOfficialAudio(artist,song){
   return good?hit:null;
 }
 $('searchBtn').onclick=async()=>{
-  const mode=document.querySelector('input[name=\"mode\"]:checked').value,
+  const code=modeToggle.checked,
         artist=artistBox.value.trim(), song=songBox.value.trim();
-  if(mode==='code'){
+  if(code){
     const id=song;if(!id){alert('Paste a YouTube ID');return;}
     const info=await fetchVideoInfo(id);
     queue.unshift({id,title:info.title,artist:info.artist});
