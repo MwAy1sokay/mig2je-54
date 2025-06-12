@@ -183,7 +183,7 @@ function onYouTubeIframeAPIReady(){
 /* === helpers === */
 const fetchVideoInfo=async id=>{
   try{const j=await(await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`)).json();
-      return{title:j.title||id,artist:(j.author_name||'').replace(/\\s*[–-]\\s*Topic\\s*$/i,'')};}
+      return{title:j.title||id,artist:(j.author_name||'').replace(/\s*[–-]\s*Topic\s*$/i,'')};}
   catch{return{title:id,artist:''}}};
 const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacentHTML('beforeend',`
   <li data-id=\"${it.id}\"><span class=\"drag-handle\">≡</span>
@@ -300,7 +300,7 @@ $('searchBtn').onclick=async()=>{
   const hit=await searchOfficialAudio(artist,song);
   if(!hit){alert('No official audio found 😕');return;}
   queue.unshift({id:hit.id.videoId,title:hit.snippet.title,
-                 artist:hit.snippet.channelTitle.replace(/\\s*[–-]\\s*Topic\\s*$/i,'').trim()});
+                 artist:hit.snippet.channelTitle.replace(/\s*[–-]\s*Topic\s*$/i,'').trim()});
   saveQueue();renderQueue();playIdx(0);artistBox.value='';songBox.value='';
 };
 
