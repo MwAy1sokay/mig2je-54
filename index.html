@@ -203,11 +203,10 @@ new Sortable(ui.queueUL, {
 
 /* === Persistence (Queue & Playlists) === */
 function loadQueue() {
-  const m = document.cookie.match(/(?:^|;\s*)queue=([^;]+)/);
-  queue = m ? JSON.parse(decodeURIComponent(m[1])) : [];
+  queue = JSON.parse(localStorage.getItem('musicQueue') || '[]');
 }
 function saveQueue() {
-  document.cookie = 'queue=' + encodeURIComponent(JSON.stringify(queue)) + ';max-age=31536000;path=/';
+  localStorage.setItem('musicQueue', JSON.stringify(queue));
 }
 const LS = 'playlists';
 function getLists() { return JSON.parse(localStorage.getItem(LS) || '{}'); }
