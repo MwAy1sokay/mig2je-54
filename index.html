@@ -173,11 +173,25 @@ function onYouTubeIframeAPIReady(){
         playerReady=true;try{player.setPlaybackQuality('tiny')}catch{}
         if(pendingPlay!==null){playIdx(pendingPlay);pendingPlay=null;}
         startProgressLoop();
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.setActionHandler('nexttrack', skip);
+          navigator.mediaSession.setActionHandler(
+            'previoustrack',
+            () => queue.length &&
+              playIdx((currentIdx - 1 + queue.length) % queue.length)
+          );
+          navigator.mediaSession.setActionHandler('play', () => player.playVideo());
+          navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
+          navigator.mediaSession.playbackState = 'none';
+        }
       },
       onStateChange:e=>{
         if(e.data===0) skip();
         playBtn.textContent=e.data===1?'⏸':'▶';
         buffering.style.display=e.data===3?'grid':'none';
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = e.data===1 ? 'playing' : 'paused';
+        }
       }}});}
 
 /* === helpers === */
@@ -191,10 +205,24 @@ const renderQueue=()=>{qEl.innerHTML='';queue.forEach((it,i)=>qEl.insertAdjacent
     <span class=\"title\">${it.title}${it.artist?` <small style=\"opacity:.7\">— ${it.artist}</small>`:''}</span>
     <button data-del=\"${i}\">✕</button></li>`))};
 const updateNow=it=>{
-  if(!it){nowBox.style.display='none';return;}
+  if(!it){
+    nowBox.style.display='none';
+    if('mediaSession' in navigator){
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+    }
+    return;
+  }
   art.src=`https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg`;
   nowT.innerHTML=`${it.title}${it.artist?` <small>— ${it.artist}</small>`:''}`;
   nowBox.style.display='flex';
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: it.title,
+      artist: it.artist,
+      artwork:[{src: art.src, sizes:'96x96', type:'image/jpeg'}]
+    });
+  }
 };
 
 /* === playback === */
