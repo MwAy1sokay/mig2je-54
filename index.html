@@ -13,7 +13,6 @@ body{margin:0 auto;max-width:720px;padding:1.25rem;background:var(--bg);
      color:var(--text);font:400 1rem/1.45 "Overpass",Arial,sans-serif}
 h1{margin:0 0 1.3rem;text-align:center;font-weight:600;letter-spacing:.03em}
 a,button,input,select{font:inherit;color:inherit}
-
 input[type=text],input[type=range],select{background:var(--panel);
       border:1px solid var(--border);color:var(--text);border-radius:4px}
 input[type=text],select{padding:.5rem .6rem}
@@ -22,7 +21,6 @@ button{padding:.5rem 1.35rem;border:none;border-radius:4px;cursor:pointer;
 button:not(:disabled):hover{background:var(--accent-soft)}
 button:not(:disabled):active{transform:scale(.97)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
 #nowPlaying{display:flex;align-items:center;gap:.75rem}
 #nowTitle{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #videoWrap{position:relative;width:clamp(100px,28vw,100px);aspect-ratio:1;border-radius:6px;
@@ -34,7 +32,6 @@ button:not(:disabled):active{transform:scale(.97)}
 #buffering::after{content:'';width:32px;height:32px;border:4px solid #fff3;border-top-color:#fff;
                   border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .controls{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;margin:1.05rem 0 var(--gap)}
 .controls input[type=range]{flex:1 1 100%;margin-top:.45rem;height:7px;appearance:none;
                             background:var(--border);border-radius:4px}
@@ -43,11 +40,9 @@ button:not(:disabled):active{transform:scale(.97)}
 #time{font-variant-numeric:tabular-nums;opacity:.8}
 @media(max-width:600px){#time{flex:1 1 100%;text-align:left;margin-top:.25rem}
                         .controls button{width:48px;height:48px;padding:0;font-size:1.25rem}}
-
 .search-bar{display:flex;flex-wrap:wrap;gap:var(--gap)}
 .search-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin-top:.4rem}
 .hidden{display:none}
-
 #queueWrap{max-height:50vh;overflow:auto;background:var(--panel);border:1px solid var(--border);
            border-radius:6px}
 #queueWrap{scrollbar-width:thin;scrollbar-color:var(--accent) var(--panel);}
@@ -68,7 +63,14 @@ button:not(:disabled):active{transform:scale(.97)}
                    border:1px solid var(--border);border-radius:6px}
 .playlist-controls h3{margin:0 0 .8rem;font-weight:600}
 .playlist-controls button,label{margin-top:.5rem;margin-right:.7rem}
-.playlist-controls input[type=file]{display:none}
+.search-mode{display:flex;justify-content:center;margin:.4rem 0;}
+.toggle{position:relative;width:46px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--panel);border:1px solid var(--border);
+        border-radius:12px;transition:.2s}
+.slider::before{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+        border-radius:50%;background:var(--accent);transition:.2s}
+.toggle input:checked+.slider::before{transform:translateX(22px);background:var(--accent-soft)}
 
 </style>
 </head>
@@ -98,11 +100,13 @@ button:not(:disabled):active{transform:scale(.97)}
   <input id="songInput" type="text" placeholder="Song title">
   <button id="searchBtn">Search & Play</button>
 </div>
-<div class="search-mode">
-  <label><input type="radio" name="mode" value="artist" checked> Artist + Title</label>
-  <label><input type="radio" name="mode" value="code"> Paste ID</label>
-</div>
 
+<div class="search-mode">
+  <label class="toggle">
+    <input id="modeToggle" type="checkbox" aria-label="Toggle to Paste-ID mode">
+    <span class="slider"></span>
+  </label>
+</div>
 <h2>Music Queue</h2>
 <div id="queueWrap"><ul id="queue"></ul></div>
 
@@ -122,7 +126,6 @@ button:not(:disabled):active{transform:scale(.97)}
 /* === helpers & cache === */
 const $=id=>document.getElementById(id);
 const ui={artist:$('artistInput'),song:$('songInput'),
-  modeRadios:document.querySelectorAll('input[name="mode"]'),
   nowBox:$('nowPlaying'),nowTitle:$('nowTitle'),art:$('art'),buffering:$('buffering'),
   playBtn:$('playPause'),prevBtn:$('prev'),skipBtn:$('skip'),
   timeLbl:$('time'),slider:$('progress'),
@@ -136,11 +139,14 @@ progress.step='any';                         /* smooth thumb */
 let queue=[],currentIdx=-1,player,playerReady=false,pendingPlay=null,vidDuration=0;
 
 /* === mode toggle === */
-modeRadios.forEach(r=>r.addEventListener('change',()=>{
-  const code=document.querySelector('input[name="mode"]:checked').value==='code';
+const modeToggle=$('modeToggle');
+function setMode(){
+  const code=modeToggle.checked;
   artistBox.classList.toggle('hidden',code);
   songBox.placeholder=code?'YouTube video ID':'Song title';
-}));
+}
+modeToggle.onchange=setMode;
+setMode();
 
 /* === Sortable queue === */
 new Sortable(qEl,{handle:'.drag-handle',animation:150,onEnd:e=>{
