@@ -164,36 +164,45 @@ const LS='playlists',getLists=()=>JSON.parse(localStorage.getItem(LS)||'{}'),
       refreshSel=()=>{sel.innerHTML='<option value=\"\">— Load —</option>';
         Object.keys(getLists()).sort().forEach(n=>sel.insertAdjacentHTML('beforeend',`<option>${n}</option>`))};
 
-/* === YouTube API === */
-function onYouTubeIframeAPIReady(){
-  player=new YT.Player('player',{
-    playerVars:{controls:0,playsinline:1},
-    events:{
-      onReady:()=>{
-        playerReady=true;try{player.setPlaybackQuality('tiny')}catch{}
-        if(pendingPlay!==null){playIdx(pendingPlay);pendingPlay=null;}
+<!-- === YouTube API === -->
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    playerVars: { controls: 0, playsinline: 1 },
+    events: {
+
+      onReady: () => {
+        playerReady = true;
+        try { player.setPlaybackQuality('tiny'); } catch {}
+
+        if (pendingPlay !== null) {
+          playIdx(pendingPlay);
+          pendingPlay = null;
+        }
+
         startProgressLoop();
+
+        // Register only the actions we still want
         if ('mediaSession' in navigator) {
-          navigator.mediaSession.setActionHandler('nexttrack', skip);
-          navigator.mediaSession.setActionHandler(
-            'previoustrack',
-            () => queue.length &&
-              playIdx((currentIdx - 1 + queue.length) % queue.length)
-          );
-          navigator.mediaSession.setActionHandler('play', () => player.playVideo());
+          navigator.mediaSession.setActionHandler('play',  () => player.playVideo());
           navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
           navigator.mediaSession.playbackState = 'none';
         }
       },
-      onStateChange:e=>{
-        if(e.data===0) skip();
-        playBtn.textContent=e.data===1?'⏸':'▶';
-        buffering.style.display=e.data===3?'grid':'none';
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.playbackState = e.data===1 ? 'playing' : 'paused';
-        }
-      }}});}
 
+      onStateChange: e => {
+        if (e.data === 0) skip();                                  // auto-advance when a track ends
+        playBtn.textContent      = e.data === 1 ? '⏸' : '▶';
+        buffering.style.display  = e.data === 3 ? 'grid' : 'none';
+
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState =
+            e.data === 1 ? 'playing' : 'paused';
+        }
+      }
+
+    }
+  });
+}
 /* === helpers === */
 const fetchVideoInfo=async id=>{
   try{const j=await(await fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`)).json();
