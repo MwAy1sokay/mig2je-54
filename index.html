@@ -289,7 +289,7 @@ async function searchOfficialAudio(artist,song){
   return good?hit:null;
 }
 $('searchBtn').onclick=async()=>{
-  const mode=document.querySelector('input[name=\"mode\"]:checked').value,
+  const mode=modeToggle.checked?'code':'search',
         artist=artistBox.value.trim(), song=songBox.value.trim();
   if(mode==='code'){
     const id=song;if(!id){alert('Paste a YouTube ID');return;}
