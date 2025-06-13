@@ -169,7 +169,12 @@ button:not(:disabled):active { transform:scale(.97) }
     <input id="songInput" type="text" placeholder="Song title">
     <button id="searchBtn">Search & Play</button>
   </div>
-  <h2>Music Queue</h2>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <h2 style="margin:0;">Music Queue</h2>
+    <button id="shuffleBtn" title="Shuffle queue" style="padding:0.45em 1.2em;font-size:1.15em;display:flex;align-items:center;gap:.5em;">
+      <span aria-hidden="true" style="font-size:1.1em;">🔀</span> Shuffle
+    </button>
+  </div>
   <div id="queueWrap"><ul id="queue"></ul></div>
   <!-- playlists -->
   <div class="playlist-controls">
@@ -246,11 +251,23 @@ const ui = {
   exportPlaylist: $('exportPlaylist'),
   importFile: $('importFile'),
   playlistName: $('playlistName'),
-  searchBtn: $('searchBtn')
+  searchBtn: $('searchBtn'),
+  shuffleBtn: $('shuffleBtn'),
 };
 let queue = [], currentIdx = -1, player, playerReady = false, pendingPlay = null, vidDuration = 0;
 
 ui.progress.step = 'any';
+
+/* === Shuffle Button === */
+ui.shuffleBtn.onclick = function() {
+  // Fisher-Yates shuffle
+  for (let i = queue.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+  renderQueue();
+  saveQueue();
+};
 
 /* === Mode Toggle === */
 function setMode() {
