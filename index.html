@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mattmusikspelaresajt 1.45</title>
+  <title>Mattmusikspelaresajt 1.46</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600&display=swap" rel="stylesheet">
   <style id="theme-style">
@@ -161,18 +161,23 @@ button:not(:disabled):active { transform:scale(.97) }
     <label>Import <input type="file" id="importFile" accept=".json"></label>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <!-- Theme Toggle Script -->
+  <!-- Theme Toggle Script FIXED -->
   <script>
 (function(){
-  const themeVars = [
-    ":root { --bg:#000; --panel:#111; --border:#333; --text:#fffcfc; --accent:#00877c; --accent-soft:#00cfbe; --gap:.65rem; }",
-    ":root { --bg:#f6f6f7; --panel:#fff; --border:#b3b3b3; --text:#151515; --accent:#007366; --accent-soft:#52c2b3; --gap:.65rem; }"
-  ];
+  const darkVars = `:root {
+    --bg:#000; --panel:#111; --border:#333; --text:#fffcfc;
+    --accent:#00877c; --accent-soft:#00cfbe; --gap:.65rem;
+  }`;
+  const lightVars = `:root {
+    --bg:#f6f6f7; --panel:#fff; --border:#b3b3b3; --text:#151515;
+    --accent:#007366; --accent-soft:#52c2b3; --gap:.65rem;
+  }`;
   const themeStyle = document.getElementById("theme-style"),
         themeToggle = document.getElementById("themeToggle"),
         themeLabel = document.getElementById("themeLabel");
+  const origCSS = themeStyle.innerHTML;
   function setTheme(dark) {
-    themeStyle.innerHTML = themeVars[dark?0:1] + themeStyle.innerHTML.replace(/^:root\s*\{[\s\S]*?\}/, "");
+    themeStyle.innerHTML = (dark ? darkVars : lightVars) + origCSS.replace(/^:root\s*\{[\s\S]*?\}/, "");
     themeLabel.textContent = dark ? "🌙" : "☀️";
     localStorage.setItem("theme", dark ? "dark" : "light");
   }
