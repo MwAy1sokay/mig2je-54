@@ -64,6 +64,12 @@ button:not(:disabled):active { transform:scale(.97) }
 @media(max-width:600px) {
   #time { flex:1 1 100%;text-align:left;margin-top:.25rem }
   .controls button {width:48px;height:48px;padding:0;font-size:1.25rem}
+  #searchToggleBtn { display:inline-block; margin-bottom:1rem; }
+  .search-bar { display:none; }
+  .search-bar.active { display:flex; }
+}
+@media(min-width:601px) {
+  #searchToggleBtn { display:none; }
 }
 .search-bar { display:flex;flex-wrap:wrap;gap:var(--gap) }
 .search-mode { display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin:0 }
@@ -128,6 +134,23 @@ button:not(:disabled):active { transform:scale(.97) }
 .theme-toggle .slider {transition:background .2s;}
 .theme-toggle input:checked + .slider {background:var(--panel);}
 .theme-toggle-label .theme-icon { font-size:1.2em;width:1.5em;text-align:center; }
+  /* Close button for mobile search */
+  .search-close-btn {
+    display:none;
+    position:absolute;
+    right:.5em;
+    top:.5em;
+    background:none;
+    border:none;
+    font-size:1.5em;
+    color:var(--accent);
+    cursor:pointer;
+    z-index:2;
+  }
+  @media(max-width:600px) {
+    .search-bar { position:relative; }
+    .search-close-btn { display:block; }
+  }
   </style>
 </head>
 <body>
@@ -141,25 +164,11 @@ button:not(:disabled):active { transform:scale(.97) }
       <span id="themeLabel" class="theme-icon">🌙</span>
     </label>
   </div>
-  <!-- now-playing -->
-  <div id="nowPlaying">
-    <div id="videoWrap">
-      <div id="player" allow="autoplay"></div>
-      <img id="art" alt="">
-      <div id="buffering" aria-hidden="true"></div>
-    </div>
-    <span id="nowTitle"></span>
-  </div>
-  <!-- transport -->
-  <div class="controls">
-    <button id="prev">⏮</button>
-    <button id="playPause">▶</button>
-    <button id="skip">⏭</button>
-    <span id="time">0:00 / 0:00</span>
-    <input type="range" id="progress" min="0" max="100" value="0">
-  </div>
+  <!-- Mobile search toggle button -->
+  <button id="searchToggleBtn" style="width:100%;">🔎 Search</button>
   <!-- search -->
-  <div class="search-bar">
+  <div class="search-bar" id="searchBar">
+    <button class="search-close-btn" id="searchCloseBtn" aria-label="Close search">&times;</button>
     <div class="search-mode">
       <label class="toggle">
         <input id="modeToggle" type="checkbox" aria-label="Toggle to Paste-ID mode">
@@ -230,6 +239,48 @@ button:not(:disabled):active { transform:scale(.97) }
   themeToggle.checked = dark;
   setTheme(dark);
 })();
+  </script>
+  <!-- Mobile search bar toggle logic -->
+  <script>
+    const searchToggleBtn = document.getElementById("searchToggleBtn");
+    const searchBar = document.getElementById("searchBar");
+    const searchCloseBtn = document.getElementById("searchCloseBtn");
+
+    function showSearchBar() {
+      searchBar.classList.add("active");
+      searchToggleBtn.style.display = "none";
+      // Focus artist input for convenience
+      const artistInput = document.getElementById("artistInput");
+      setTimeout(() => artistInput && artistInput.focus(), 100);
+    }
+    function hideSearchBar() {
+      searchBar.classList.remove("active");
+      searchToggleBtn.style.display = "";
+      // Blur active input to hide mobile keyboard
+      document.activeElement.blur?.();
+    }
+    // Show on button click
+    searchToggleBtn.addEventListener("click", showSearchBar);
+    // Hide on close button click
+    searchCloseBtn.addEventListener("click", hideSearchBar);
+    // Optional: Hide search bar on "Escape" key
+    document.addEventListener("keydown", function(e){
+      if (window.innerWidth <= 600 && e.key === "Escape" && searchBar.classList.contains("active")) {
+        hideSearchBar();
+      }
+    });
+    // On desktop, always show search bar
+    function updateSearchBarDisplay() {
+      if(window.innerWidth > 600) {
+        searchBar.classList.add("active");
+        searchToggleBtn.style.display = "none";
+      } else {
+        searchBar.classList.remove("active");
+        searchToggleBtn.style.display = "";
+      }
+    }
+    window.addEventListener("resize", updateSearchBarDisplay);
+    updateSearchBarDisplay();
   </script>
   <script>
 /* === DOM and State Cache === */
