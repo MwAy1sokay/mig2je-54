@@ -387,7 +387,7 @@ ui.searchBtn.onclick = async () => {
   queue.unshift({
     id: hit.id.videoId,
     title: hit.snippet.title,
-    artist: hit.snippet.channelTitle.replace(/\s*-\Topic\s*$/i, '').trim()
+    artist: hit.snippet.channelTitle.replace(/\s*-\s*Topic\s*$/i, '').trim()
   });
   saveQueue(); renderQueue(); playIdx(0); ui.artist.value = ''; ui.song.value = '';
 };
