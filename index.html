@@ -94,7 +94,7 @@ button:not(:disabled):active { transform:scale(.97) }
 }
 .playlist-controls h3 { margin:0 0 .8rem;font-weight:600 }
 .playlist-controls button,label { margin-top:.5rem;margin-right:.7rem }
-.toggle { position:relative;width:46px;height:24px;cursor:pointer;user-select:none;display:inline-block;vertical-align:middle;}
+.toggle { position:relative;width:46px;height:24px;cursor:pointer }
 .toggle input { opacity:0;width:0;height:0 }
 .slider {
   position:absolute;inset:0;background:var(--panel);border:1px solid var(--border);
@@ -107,11 +107,7 @@ button:not(:disabled):active { transform:scale(.97) }
 .toggle input:checked+.slider::before {
   transform:translateX(22px);background:var(--accent-soft)
 }
-/* --- theme toggle label/icon fix --- */
-.theme-toggle-label {
-  display:flex;align-items:center;gap:.5em;padding-left:.5em;font-size:1.2em;
-  cursor:pointer;user-select:none;
-}
+.theme-toggle-label { display:flex;align-items:center;gap:.5em;padding-left:.5em;font-size:1.2em;cursor:pointer;user-select:none; }
 .theme-toggle-label .slider { position:relative;min-width:46px;min-height:24px; }
 .theme-toggle-label .theme-icon { font-size:1.2em;width:1.5em;text-align:center; }
   </style>
@@ -119,7 +115,6 @@ button:not(:disabled):active { transform:scale(.97) }
 <body>
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <h1 style="margin-bottom:0;">Mattmusikspelaresajt 1.46</h1>
-    <!-- Light/Dark Toggle (fixed for visibility and icon alignment) -->
     <label class="theme-toggle-label" title="Light/Dark mode">
       <input id="themeToggle" type="checkbox" aria-label="Toggle light/dark mode">
       <span class="slider"></span>
@@ -168,30 +163,43 @@ button:not(:disabled):active { transform:scale(.97) }
     <label>Import <input type="file" id="importFile" accept=".json"></label>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <!-- Theme Toggle Script FIXED -->
+  <!-- Theme Toggle Script (using CSS variables directly) -->
   <script>
 (function(){
-  const darkVars = `:root {
-    --bg:#000; --panel:#111; --border:#333; --text:#fffcfc;
-    --accent:#00877c; --accent-soft:#00cfbe; --gap:.65rem;
-  }`;
-  const lightVars = `:root {
-    --bg:#f6f6f7; --panel:#fff; --border:#b3b3b3; --text:#151515;
-    --accent:#007366; --accent-soft:#52c2b3; --gap:.65rem;
-  }`;
-  const themeStyle = document.getElementById("theme-style"),
-        themeToggle = document.getElementById("themeToggle"),
-        themeLabel = document.getElementById("themeLabel");
-  const origCSS = themeStyle.innerHTML;
+  const darkVars = {
+    '--bg': '#000',
+    '--panel': '#111',
+    '--border': '#333',
+    '--text': '#fffcfc',
+    '--accent': '#00877c',
+    '--accent-soft': '#00cfbe',
+    '--gap': '.65rem'
+  };
+  const lightVars = {
+    '--bg': '#f6f6f7',
+    '--panel': '#fff',
+    '--border': '#b3b3b3',
+    '--text': '#151515',
+    '--accent': '#007366',
+    '--accent-soft': '#52c2b3',
+    '--gap': '.65rem'
+  };
+  const themeToggle = document.getElementById("themeToggle");
+  const themeLabel = document.getElementById("themeLabel");
+
   function setTheme(dark) {
-    themeStyle.innerHTML = (dark ? darkVars : lightVars) + origCSS.replace(/^:root\s*\{[\s\S]*?\}/, "");
+    const vars = dark ? darkVars : lightVars;
+    Object.keys(vars).forEach(k => document.documentElement.style.setProperty(k, vars[k]));
     themeLabel.textContent = dark ? "🌙" : "☀️";
     localStorage.setItem("theme", dark ? "dark" : "light");
   }
+
   themeToggle.onchange = () => setTheme(themeToggle.checked);
+
   let stored = localStorage.getItem("theme"),
       prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches,
       dark = stored === "dark" || (!stored && prefersDark);
+
   themeToggle.checked = dark;
   setTheme(dark);
 })();
