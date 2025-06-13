@@ -163,6 +163,15 @@ button:not(:disabled):active { transform:scale(.97) }
       <span id="themeLabel" class="theme-icon">🌙</span>
     </label>
   </div>
+  <!-- Now Playing area must come BEFORE the search bar and outside of it -->
+  <div id="nowPlaying">
+    <div id="videoWrap">
+      <div id="player" allow="autoplay"></div>
+      <img id="art" alt="">
+      <div id="buffering" aria-hidden="true"></div>
+    </div>
+    <span id="nowTitle"></span>
+  </div>
   <!-- Mobile search toggle button -->
   <button id="searchToggleBtn" style="width:100%;">🔎 Search</button>
   <!-- search -->
@@ -246,9 +255,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const searchBar = document.getElementById("searchBar");
   const searchCloseBtn = document.getElementById("searchCloseBtn");
   let searchBarUserOpened = false;
-  // Helper: determine if mobile
   function isMobile() { return window.innerWidth <= 600; }
-  // Show search bar (mobile only)
   function showSearchBar() {
     searchBar.classList.add("active");
     searchToggleBtn.style.display = "none";
@@ -256,23 +263,19 @@ document.addEventListener("DOMContentLoaded", function() {
     const artistInput = document.getElementById("artistInput");
     setTimeout(() => artistInput && artistInput.focus(), 100);
   }
-  // Hide search bar (mobile only)
   function hideSearchBar() {
     searchBar.classList.remove("active");
     searchToggleBtn.style.display = "";
     searchBarUserOpened = false;
     document.activeElement.blur?.();
   }
-  // Click events
   searchToggleBtn.addEventListener("click", showSearchBar);
   searchCloseBtn.addEventListener("click", hideSearchBar);
-  // Escape handling
   document.addEventListener("keydown", function(e){
     if (isMobile() && e.key === "Escape" && searchBar.classList.contains("active")) {
       hideSearchBar();
     }
   });
-  // On resize, only update if not user-opened on mobile
   function updateSearchBarDisplay() {
     if (!isMobile()) {
       searchBar.classList.add("active");
@@ -289,7 +292,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
   window.addEventListener("resize", updateSearchBarDisplay);
-  // Initial state
   updateSearchBarDisplay();
 });
   </script>
@@ -325,7 +327,6 @@ ui.progress.step = 'any';
 
 /* === Shuffle Button === */
 ui.shuffleBtn.onclick = function() {
-  // Fisher-Yates shuffle
   for (let i = queue.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [queue[i], queue[j]] = [queue[j], queue[i]];
