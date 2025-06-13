@@ -67,9 +67,13 @@ button:not(:disabled):active { transform:scale(.97) }
   #searchToggleBtn { display:inline-block; margin-bottom:1rem; }
   .search-bar { display:none; }
   .search-bar.active { display:flex; }
+  .search-bar { position:relative; }
+  .search-close-btn { display:block; }
 }
 @media(min-width:601px) {
   #searchToggleBtn { display:none; }
+  .search-bar { display:flex !important; }
+  .search-close-btn { display:none !important; }
 }
 .search-bar { display:flex;flex-wrap:wrap;gap:var(--gap) }
 .search-mode { display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin:0 }
@@ -146,10 +150,6 @@ button:not(:disabled):active { transform:scale(.97) }
     color:var(--accent);
     cursor:pointer;
     z-index:2;
-  }
-  @media(max-width:600px) {
-    .search-bar { position:relative; }
-    .search-close-btn { display:block; }
   }
   </style>
 </head>
@@ -242,45 +242,42 @@ button:not(:disabled):active { transform:scale(.97) }
   </script>
   <!-- Mobile search bar toggle logic -->
   <script>
-    const searchToggleBtn = document.getElementById("searchToggleBtn");
-    const searchBar = document.getElementById("searchBar");
-    const searchCloseBtn = document.getElementById("searchCloseBtn");
+document.addEventListener("DOMContentLoaded", function() {
+  const searchToggleBtn = document.getElementById("searchToggleBtn");
+  const searchBar = document.getElementById("searchBar");
+  const searchCloseBtn = document.getElementById("searchCloseBtn");
 
-    function showSearchBar() {
+  function showSearchBar() {
+    searchBar.classList.add("active");
+    searchToggleBtn.style.display = "none";
+    const artistInput = document.getElementById("artistInput");
+    setTimeout(() => artistInput && artistInput.focus(), 100);
+  }
+  function hideSearchBar() {
+    searchBar.classList.remove("active");
+    searchToggleBtn.style.display = "";
+    document.activeElement.blur?.();
+  }
+
+  searchToggleBtn.addEventListener("click", showSearchBar);
+  searchCloseBtn.addEventListener("click", hideSearchBar);
+  document.addEventListener("keydown", function(e){
+    if (window.innerWidth <= 600 && e.key === "Escape" && searchBar.classList.contains("active")) {
+      hideSearchBar();
+    }
+  });
+  function updateSearchBarDisplay() {
+    if(window.innerWidth > 600) {
       searchBar.classList.add("active");
       searchToggleBtn.style.display = "none";
-      // Focus artist input for convenience
-      const artistInput = document.getElementById("artistInput");
-      setTimeout(() => artistInput && artistInput.focus(), 100);
-    }
-    function hideSearchBar() {
+    } else {
       searchBar.classList.remove("active");
       searchToggleBtn.style.display = "";
-      // Blur active input to hide mobile keyboard
-      document.activeElement.blur?.();
     }
-    // Show on button click
-    searchToggleBtn.addEventListener("click", showSearchBar);
-    // Hide on close button click
-    searchCloseBtn.addEventListener("click", hideSearchBar);
-    // Optional: Hide search bar on "Escape" key
-    document.addEventListener("keydown", function(e){
-      if (window.innerWidth <= 600 && e.key === "Escape" && searchBar.classList.contains("active")) {
-        hideSearchBar();
-      }
-    });
-    // On desktop, always show search bar
-    function updateSearchBarDisplay() {
-      if(window.innerWidth > 600) {
-        searchBar.classList.add("active");
-        searchToggleBtn.style.display = "none";
-      } else {
-        searchBar.classList.remove("active");
-        searchToggleBtn.style.display = "";
-      }
-    }
-    window.addEventListener("resize", updateSearchBarDisplay);
-    updateSearchBarDisplay();
+  }
+  window.addEventListener("resize", updateSearchBarDisplay);
+  updateSearchBarDisplay();
+});
   </script>
   <script>
 /* === DOM and State Cache === */
