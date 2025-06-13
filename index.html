@@ -262,6 +262,7 @@ document.addEventListener("DOMContentLoaded", function() {
     searchBarUserOpened = true;
     const artistInput = document.getElementById("artistInput");
     setTimeout(() => artistInput && artistInput.focus(), 100);
+    setMode(); // <-- Ensure toggle state is reflected when showing the bar
   }
   function hideSearchBar() {
     searchBar.classList.remove("active");
