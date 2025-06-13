@@ -9,6 +9,7 @@
 :root {
   --bg:#000; --panel:#111; --border:#333; --text:#fffcfc;
   --accent:#00877c; --accent-soft:#00cfbe; --gap:.65rem;
+  --row-hover:#181818;
 }
 * { box-sizing:border-box; }
 body {
@@ -81,7 +82,7 @@ button:not(:disabled):active { transform:scale(.97) }
   display:flex;align-items:center;gap:.45rem;padding:.55rem .65rem;
   border-bottom:1px solid var(--border);
 }
-#queue li:hover { background:#181818 }
+#queue li:hover { background:var(--row-hover); }
 #queue li img.thumb {
   width:48px;height:48px;flex:0 0 auto;object-fit:cover;object-position:center;
   border-radius:4px;
@@ -197,7 +198,8 @@ button:not(:disabled):active { transform:scale(.97) }
     '--text': '#fffcfc',
     '--accent': '#00877c',
     '--accent-soft': '#00cfbe',
-    '--gap': '.65rem'
+    '--gap': '.65rem',
+    '--row-hover': '#181818'
   };
   const lightVars = {
     '--bg': '#f6f6f7',
@@ -206,7 +208,8 @@ button:not(:disabled):active { transform:scale(.97) }
     '--text': '#151515',
     '--accent': '#007366',
     '--accent-soft': '#52c2b3',
-    '--gap': '.65rem'
+    '--gap': '.65rem',
+    '--row-hover': '#e6edeb'
   };
   const themeToggle = document.getElementById("themeToggle");
   const themeLabel = document.getElementById("themeLabel");
