@@ -61,11 +61,7 @@ button:not(:disabled):active { transform:scale(.97) }
   background:var(--accent);border:0;margin-top:-3.5px;
 }
 #time { font-variant-numeric:tabular-nums;opacity:.8;min-width:5.5rem }
-@media(max-width:600px) {
-  #time { flex:1 1 100%;text-align:left;margin-top:.25rem }
-  .controls button {width:48px;height:48px;padding:0;font-size:1.25rem}
-}
-.search-bar { display:flex;flex-wrap:wrap;gap:var(--gap) }
+.search-bar { display:none; flex-wrap:wrap; gap:var(--gap); }
 .search-mode { display:flex;gap:.8rem;align-items:center;font-size:.9rem;margin:0 }
 .hidden { display:none }
 #queueWrap {
@@ -128,6 +124,32 @@ button:not(:disabled):active { transform:scale(.97) }
 .theme-toggle .slider {transition:background .2s;}
 .theme-toggle input:checked + .slider {background:var(--panel);}
 .theme-toggle-label .theme-icon { font-size:1.2em;width:1.5em;text-align:center; }
+/* Close button for mobile search */
+.search-close-btn {
+  display:none;
+  position:absolute;
+  right:.5em;
+  top:.5em;
+  background:none;
+  border:none;
+  font-size:1.5em;
+  color:var(--accent);
+  cursor:pointer;
+  z-index:2;
+}
+@media(max-width:600px) {
+  #time { flex:1 1 100%;text-align:left;margin-top:.25rem }
+  .controls button {width:48px;height:48px;padding:0;font-size:1.25rem}
+  #searchToggleBtn { display:inline-block; margin-bottom:1rem; }
+  .search-bar.active { display:flex; }
+  .search-bar { position:relative; }
+  .search-close-btn { display:block; }
+}
+@media(min-width:601px) {
+  #searchToggleBtn { display:none; }
+  .search-bar { display:flex !important; }
+  .search-close-btn { display:none !important; }
+}
   </style>
 </head>
 <body>
@@ -141,7 +163,7 @@ button:not(:disabled):active { transform:scale(.97) }
       <span id="themeLabel" class="theme-icon">🌙</span>
     </label>
   </div>
-  <!-- now-playing -->
+  <!-- Now Playing area must come BEFORE the search bar and outside of it -->
   <div id="nowPlaying">
     <div id="videoWrap">
       <div id="player" allow="autoplay"></div>
@@ -150,16 +172,11 @@ button:not(:disabled):active { transform:scale(.97) }
     </div>
     <span id="nowTitle"></span>
   </div>
-  <!-- transport -->
-  <div class="controls">
-    <button id="prev">⏮</button>
-    <button id="playPause">▶</button>
-    <button id="skip">⏭</button>
-    <span id="time">0:00 / 0:00</span>
-    <input type="range" id="progress" min="0" max="100" value="0">
-  </div>
+  <!-- Mobile search toggle button -->
+  <button id="searchToggleBtn" style="width:100%;">🔎 Search</button>
   <!-- search -->
-  <div class="search-bar">
+  <div class="search-bar" id="searchBar">
+    <button class="search-close-btn" id="searchCloseBtn" aria-label="Close search">&times;</button>
     <div class="search-mode">
       <label class="toggle">
         <input id="modeToggle" type="checkbox" aria-label="Toggle to Paste-ID mode">
@@ -231,6 +248,54 @@ button:not(:disabled):active { transform:scale(.97) }
   setTheme(dark);
 })();
   </script>
+  <!-- Mobile search bar toggle logic -->
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+  const searchToggleBtn = document.getElementById("searchToggleBtn");
+  const searchBar = document.getElementById("searchBar");
+  const searchCloseBtn = document.getElementById("searchCloseBtn");
+  let searchBarUserOpened = false;
+  function isMobile() { return window.innerWidth <= 600; }
+  function showSearchBar() {
+    searchBar.classList.add("active");
+    searchToggleBtn.style.display = "none";
+    searchBarUserOpened = true;
+    const artistInput = document.getElementById("artistInput");
+    setTimeout(() => artistInput && artistInput.focus(), 100);
+    setMode(); // <-- Ensure toggle state is reflected when showing the bar
+  }
+  function hideSearchBar() {
+    searchBar.classList.remove("active");
+    searchToggleBtn.style.display = "";
+    searchBarUserOpened = false;
+    document.activeElement.blur?.();
+  }
+  searchToggleBtn.addEventListener("click", showSearchBar);
+  searchCloseBtn.addEventListener("click", hideSearchBar);
+  document.addEventListener("keydown", function(e){
+    if (isMobile() && e.key === "Escape" && searchBar.classList.contains("active")) {
+      hideSearchBar();
+    }
+  });
+  function updateSearchBarDisplay() {
+    if (!isMobile()) {
+      searchBar.classList.add("active");
+      searchToggleBtn.style.display = "none";
+      searchBarUserOpened = false;
+    } else {
+      if (searchBarUserOpened) {
+        searchBar.classList.add("active");
+        searchToggleBtn.style.display = "none";
+      } else {
+        searchBar.classList.remove("active");
+        searchToggleBtn.style.display = "";
+      }
+    }
+  }
+  window.addEventListener("resize", updateSearchBarDisplay);
+  updateSearchBarDisplay();
+});
+  </script>
   <script>
 /* === DOM and State Cache === */
 const $ = id => document.getElementById(id);
@@ -263,7 +328,6 @@ ui.progress.step = 'any';
 
 /* === Shuffle Button === */
 ui.shuffleBtn.onclick = function() {
-  // Fisher-Yates shuffle
   for (let i = queue.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [queue[i], queue[j]] = [queue[j], queue[i]];
