@@ -84,12 +84,25 @@ button:not(:disabled):active { transform:scale(.97) }
     justify-content: center;
     align-items: center;
     background: #000;
+    /* Add depth: */
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.24), 0 1.5px 6px 0 rgba(0,0,0,0.30);
+    position: relative;
+  }
+  #videoWrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.11) 100%);
+    pointer-events: none;
+    z-index: 2;
   }
   #art {
     border-radius: 24px !important;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   }
   .controls { flex-direction:column; align-items:stretch; gap:0.5rem; }
   .controls button {width:48px;height:48px;padding:0;font-size:1.15rem}
