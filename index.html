@@ -365,7 +365,7 @@ function renderQueue() {
   queue.forEach((it, i) => ui.queueUL.insertAdjacentHTML('beforeend', `
     <li data-id="${it.id}">
       <span class="drag-handle">≡</span>
-      <img class="thumb" src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/hqdefault.jpg" alt="">
+      <img class="thumb" src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="">
       <span class="title">${it.title}${it.artist ? ` <small style="opacity:.7">— ${it.artist}</small>` : ''}</span>
       <button data-del="${i}">✕</button>
     </li>`));
