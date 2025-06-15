@@ -48,21 +48,31 @@ button:not(:disabled):active { transform:scale(.97) }
   border-radius:50%;animation:spin .8s linear infinite;
 }
 @keyframes spin { to{transform:rotate(360deg)} }
-.controls {
-  display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap;
-  margin:1.05rem 0 var(--gap);
-}
-.controls input[type=range] {
-  flex:1 1 100%;margin-top:.45rem;height:7px;appearance:none;
-  background:var(--border);border-radius:4px;
-}
-.controls input[type=range]::-webkit-slider-thumb {
-  appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--accent);border:0;margin-top:-3.5px;
-}
-#time { font-variant-numeric:tabular-nums;opacity:.8;min-width:5.5rem }
 
-/* --- Play/Pause/Prev/Skip Button Circle --- */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap);
+  margin: 1.05rem 0 var(--gap);
+  width: 100%;
+}
+
+.controls-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2rem; /* More gap for the larger buttons */
+  width: 100%;
+  margin-bottom: 0.3rem;
+}
+
+.controls-spacer {
+  flex: 1 1 0;
+  height: 0;
+}
+
 #playPause, #prev, #skip {
   background: var(--accent);
   border: none;
@@ -72,17 +82,19 @@ button:not(:disabled):active { transform:scale(.97) }
   justify-content: center;
   transition: background .15s, box-shadow .15s;
   position: relative;
-  box-shadow: 0 4px 16px 0 #00877c40; /* subtle shadow UNDER the circle only */
+  box-shadow: 0 4px 16px 0 #00877c40;
 }
 #playPause {
   width: 78.4px;  /* 56px * 1.4 */
   height: 78.4px;
   border-radius: 50%;
+  z-index: 1;
 }
 #prev, #skip {
   width: 67.2px;  /* 56px * 1.2 */
   height: 67.2px;
   border-radius: 50%;
+  z-index: 1;
 }
 #playPause:focus-visible,
 #prev:focus-visible,
@@ -108,6 +120,26 @@ button:not(:disabled):active { transform:scale(.97) }
   margin: 0 auto;
   pointer-events: none;
 }
+
+/* Progress and time row styling */
+.controls-progress-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  width: 100%;
+}
+
+#time {
+  font-variant-numeric:tabular-nums;
+  opacity:.8;
+  min-width:5.5rem
+}
+#progress {
+  flex: 1 1 auto;
+}
+
 @media(max-width: 600px) {
   #playPause {
     width: 67.2px; /* 48px * 1.4 */
@@ -124,6 +156,9 @@ button:not(:disabled):active { transform:scale(.97) }
   #prevIcon, #skipIcon {
     width: 26.4px; /* 22px * 1.2 */
     height: 26.4px;
+  }
+  .controls-row {
+    gap: 1.4rem;
   }
 }
 @media(max-width: 430px) {
@@ -142,6 +177,9 @@ button:not(:disabled):active { transform:scale(.97) }
   #prevIcon, #skipIcon {
     width: 21.6px; /* 18px * 1.2 */
     height: 21.6px;
+  }
+  .controls-row {
+    gap: 0.7rem;
   }
 }
 /* --- Responsive Design Improvements --- */
@@ -293,17 +331,23 @@ button:not(:disabled):active { transform:scale(.97) }
   </div>
   <!-- transport -->
   <div class="controls">
-    <button id="prev" aria-label="Previous">
-      <img id="prevIcon" src="backwards.svg" alt="Previous" width="28" height="28">
-    </button>
-    <button id="playPause" aria-label="Play">
-      <img id="playPauseIcon" src="play.svg" alt="Play" width="28" height="28">
-    </button>
-    <button id="skip" aria-label="Next">
-      <img id="skipIcon" src="forwards.svg" alt="Next" width="28" height="28">
-    </button>
-    <span id="time">0:00 / 0:00</span>
-    <input type="range" id="progress" min="0" max="100" value="0">
+    <div class="controls-row">
+      <span class="controls-spacer"></span>
+      <button id="prev" aria-label="Previous">
+        <img id="prevIcon" src="backwards.svg" alt="Previous" width="28" height="28">
+      </button>
+      <button id="playPause" aria-label="Play">
+        <img id="playPauseIcon" src="play.svg" alt="Play" width="28" height="28">
+      </button>
+      <button id="skip" aria-label="Next">
+        <img id="skipIcon" src="forwards.svg" alt="Next" width="28" height="28">
+      </button>
+      <span class="controls-spacer"></span>
+    </div>
+    <div class="controls-progress-row">
+      <span id="time">0:00 / 0:00</span>
+      <input type="range" id="progress" min="0" max="100" value="0">
+    </div>
   </div>
   <!-- search -->
   <div class="search-bar">
